@@ -30,17 +30,17 @@ export const ModelSelector = ({ value, onChange, filterType = 'all' }: ModelSele
 
   return (
     <div className="space-y-2">
-      <Label className="text-sm font-medium">Model</Label>
+      <Label className="text-sm font-medium text-foreground">Model</Label>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="bg-surface border-border hover:border-neon/50 transition-colors">
+        <SelectTrigger className="bg-surface border-border hover:border-neon/50 transition-all rounded-xl h-11">
           <SelectValue placeholder="Select model" />
         </SelectTrigger>
-        <SelectContent className="bg-surface border-border">
+        <SelectContent className="bg-surface border-border rounded-xl">
           {filteredModels.map((model) => (
             <SelectItem 
               key={model.id} 
               value={model.id}
-              className="hover:bg-surface-elevated focus:bg-surface-elevated"
+              className="hover:bg-surface-elevated focus:bg-surface-elevated rounded-lg"
             >
               {model.name}
             </SelectItem>

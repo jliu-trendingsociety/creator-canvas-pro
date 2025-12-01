@@ -15,52 +15,52 @@ export const ControlPanel = () => {
   const [prompt, setPrompt] = useState("");
 
   return (
-    <aside className="w-80 bg-sidebar border-r border-sidebar-border p-6 space-y-6 overflow-y-auto">
+    <aside className="w-[340px] bg-sidebar border-r border-sidebar-border p-6 space-y-6 overflow-y-auto">
       <div>
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-base font-semibold mb-4 flex items-center gap-2 text-muted-foreground">
           <span className="text-neon">●</span> Video
         </h2>
         <div className="flex gap-2 text-sm">
-          <button className="px-3 py-1.5 rounded-md bg-surface-elevated border border-border hover:border-neon/50 transition-colors">
+          <button className="px-4 py-2 rounded-md bg-surface-elevated border border-border hover:border-neon/50 transition-colors font-medium">
             Draw to Video
           </button>
-          <button className="px-3 py-1.5 rounded-md hover:bg-surface-elevated transition-colors">
+          <button className="px-4 py-2 rounded-md hover:bg-surface-elevated border border-transparent hover:border-border transition-colors">
             Sketch to Video
           </button>
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Start frame</Label>
+          <Label className="text-sm font-medium text-foreground">Start frame</Label>
           <div className="relative">
-            <div className="h-32 bg-surface-elevated rounded-lg border-2 border-dashed border-border hover:border-neon/50 transition-colors flex flex-col items-center justify-center cursor-pointer group">
-              <Upload className="w-6 h-6 mb-2 text-muted-foreground group-hover:text-neon transition-colors" />
-              <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">Upload image</span>
+            <div className="h-36 bg-surface-elevated rounded-xl border-2 border-dashed border-border hover:border-neon/50 transition-all flex flex-col items-center justify-center cursor-pointer group">
+              <Upload className="w-7 h-7 mb-2 text-muted-foreground group-hover:text-neon transition-colors" />
+              <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors font-medium">Upload image</span>
             </div>
           </div>
-          <span className="text-xs text-muted-foreground">Required</span>
+          <span className="text-xs text-muted-foreground font-medium">Required</span>
         </div>
 
         <div className="space-y-2">
-          <Label className="text-sm font-medium">End frame</Label>
+          <Label className="text-sm font-medium text-foreground">End frame</Label>
           <div className="relative">
-            <div className="h-32 bg-surface rounded-lg border border-border hover:border-neon/50 transition-colors flex flex-col items-center justify-center cursor-pointer group">
-              <Upload className="w-6 h-6 mb-2 text-muted-foreground group-hover:text-neon transition-colors" />
-              <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">Upload image</span>
+            <div className="h-36 bg-surface rounded-xl border-2 border-dashed border-border hover:border-neon/50 transition-all flex flex-col items-center justify-center cursor-pointer group">
+              <Upload className="w-7 h-7 mb-2 text-muted-foreground group-hover:text-neon transition-colors" />
+              <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors font-medium">Upload image</span>
             </div>
           </div>
-          <span className="text-xs text-muted-foreground">Optional</span>
+          <span className="text-xs text-muted-foreground font-medium">Optional</span>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="prompt" className="text-sm font-medium">Prompt</Label>
+          <Label htmlFor="prompt" className="text-sm font-medium text-foreground">Prompt</Label>
           <textarea
             id="prompt"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Describe the scene you imagine, with details..."
-            className="w-full h-24 px-3 py-2 bg-surface border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-neon/50 hover:border-neon/50 transition-colors"
+            className="w-full h-28 px-4 py-3 bg-surface border border-border rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-neon/50 hover:border-neon/50 transition-all text-sm"
           />
         </div>
 
@@ -80,35 +80,36 @@ export const ControlPanel = () => {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Duration</Label>
+            <Label className="text-sm font-medium text-foreground">Duration</Label>
             <Select value={duration} onValueChange={setDuration}>
-              <SelectTrigger className="bg-surface border-border hover:border-neon/50 transition-colors">
+              <SelectTrigger className="bg-surface border-border hover:border-neon/50 transition-all rounded-xl h-11">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-surface border-border">
-                <SelectItem value="5s">5s</SelectItem>
-                <SelectItem value="10s">10s</SelectItem>
+              <SelectContent className="bg-surface border-border rounded-xl">
+                <SelectItem value="5s" className="rounded-lg">5s</SelectItem>
+                <SelectItem value="10s" className="rounded-lg">10s</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Resolution</Label>
+            <Label className="text-sm font-medium text-foreground">Resolution</Label>
             <Select value={resolution} onValueChange={setResolution}>
-              <SelectTrigger className="bg-surface border-border hover:border-neon/50 transition-colors">
+              <SelectTrigger className="bg-surface border-border hover:border-neon/50 transition-all rounded-xl h-11">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-surface border-border">
-                <SelectItem value="720p">720p</SelectItem>
-                <SelectItem value="1080p">1080p</SelectItem>
+              <SelectContent className="bg-surface border-border rounded-xl">
+                <SelectItem value="720p" className="rounded-lg">720p</SelectItem>
+                <SelectItem value="1080p" className="rounded-lg">1080p</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        <Button className="w-full bg-neon text-primary-foreground hover:bg-neon-glow font-semibold py-6 neon-glow transition-all">
+        <Button className="w-full bg-neon text-background hover:bg-neon-glow font-bold py-7 neon-glow transition-all rounded-xl text-base">
           Generate
-          <span className="ml-2 text-sm opacity-80">6</span>
+          <Sparkles className="ml-2 w-5 h-5" />
+          <span className="ml-1 text-sm opacity-90">6</span>
         </Button>
       </div>
     </aside>
