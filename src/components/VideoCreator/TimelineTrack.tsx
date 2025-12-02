@@ -44,11 +44,16 @@ export const TimelineTrack = ({
     const time = percentage * duration;
 
     if (dragType === 'scrub') {
+      // Scrubbing updates current time
       onSeek(time);
     } else if (dragType === 'start' && onTrimChange) {
+      // Dragging start handle updates trim point AND seeks to that point
       onTrimChange(time, effectiveEndFrame);
+      onSeek(time);
     } else if (dragType === 'end' && onTrimChange) {
+      // Dragging end handle updates trim point AND seeks to that point
       onTrimChange(startFrame, time);
+      onSeek(time);
     }
   };
 
@@ -66,7 +71,7 @@ export const TimelineTrack = ({
         window.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, dragType]);
+  }, [isDragging, dragType, duration, startFrame, effectiveEndFrame, onSeek, onTrimChange]);
 
   const handleThumbnailClick = (index: number) => {
     const time = (index / thumbnails.length) * duration;
