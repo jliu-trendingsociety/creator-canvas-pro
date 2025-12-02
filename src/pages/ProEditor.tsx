@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Play, Pause, Volume2, Maximize, RotateCcw } from "lucide-react";
+import { Upload, Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronLeft, ChevronRight, Sparkles, Video } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
 
 export default function ProEditor() {
   const [uploadedVideo, setUploadedVideo] = useState<string | null>(null);
@@ -10,7 +11,11 @@ export default function ProEditor() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
+  const [showSafeFrames, setShowSafeFrames] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,6 +86,15 @@ export default function ProEditor() {
     if (videoRef.current) {
       videoRef.current.volume = value[0];
       setVolume(value[0]);
+      setIsMuted(value[0] === 0);
+    }
+  };
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      const newMuted = !isMuted;
+      setIsMuted(newMuted);
+      videoRef.current.volume = newMuted ? 0 : volume;
     }
   };
 
@@ -99,9 +113,15 @@ export default function ProEditor() {
   return (
     <div className="h-screen w-full flex flex-col bg-background overflow-hidden">
       {/* Top Header */}
-      <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-surface">
-        <h1 className="text-2xl font-bold text-neon">PRO EDITOR</h1>
-        <Button className="bg-neon text-background hover:bg-neon-glow font-bold">
+      <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-surface shadow-lg">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-neon">PRO EDITOR</h1>
+          <Badge className="bg-neon/20 text-neon border-neon/50 hover:bg-neon/30">
+            <Sparkles className="w-3 h-3 mr-1" />
+            PRO
+          </Badge>
+        </div>
+        <Button className="bg-neon text-background hover:bg-neon-glow font-bold transition-all hover:shadow-[0_0_20px_rgba(186,230,55,0.4)]">
           Export Video
         </Button>
       </header>
@@ -109,99 +129,187 @@ export default function ProEditor() {
       {/* Main Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT PANEL - Control Panel */}
-        <aside className="w-80 border-r border-border bg-surface overflow-y-auto">
+        <aside 
+          className={`border-r border-border/50 bg-surface overflow-y-auto transition-all duration-300 ${
+            leftPanelCollapsed ? 'w-0' : 'w-80'
+          }`}
+        >
           <div className="p-6 space-y-6">
-            {/* Upload Zone */}
-            <div
-              onDrop={handleDrop}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragging(true);
-              }}
-              onDragLeave={() => setIsDragging(false)}
-              onClick={() => fileInputRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
-                isDragging
-                  ? "border-neon bg-neon/10"
-                  : "border-border hover:border-neon/50"
-              }`}
+            {/* Collapse Toggle */}
+            <button
+              onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
+              className="absolute -right-3 top-20 z-10 bg-surface-elevated border border-border rounded-full p-1 hover:bg-muted transition-colors"
             >
-              <Upload className="w-12 h-12 mx-auto mb-4 text-neon" />
-              <p className="text-foreground font-medium mb-2">Upload Video or Image</p>
-              <p className="text-sm text-muted-foreground">
-                Drop files here or click to browse
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                Supports: .mp4, .mov, .webm, .png, .jpg
-              </p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="video/*,image/*"
-                onChange={handleFileInput}
-                className="hidden"
-              />
+              <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+            </button>
+
+            {/* STEP 1 — VIDEO INPUT */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-neon tracking-wider">STEP 1 — VIDEO INPUT</h3>
+              {/* Upload Zone */}
+              <div
+                onDrop={handleDrop}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+                  isDragging
+                    ? "border-neon bg-neon/10 shadow-[0_0_20px_rgba(186,230,55,0.2)]"
+                    : "border-border hover:border-neon/50 hover:bg-surface-elevated"
+                }`}
+              >
+                <Upload className="w-12 h-12 mx-auto mb-4 text-neon animate-pulse" />
+                <p className="text-foreground font-medium mb-2">Upload Video or Image</p>
+                <p className="text-sm text-muted-foreground">
+                  Drop files here or click to browse
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Supports: .mp4, .mov, .webm, .png, .jpg
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="video/*,image/*"
+                  onChange={handleFileInput}
+                  className="hidden"
+                />
+              </div>
+
+              {/* Import from Previous Generation */}
+              <Button 
+                variant="outline" 
+                className="w-full border-border/50 text-muted-foreground hover:text-foreground hover:border-neon/50 transition-all"
+              >
+                <Video className="w-4 h-4 mr-2" />
+                Import from Previous Generation
+              </Button>
             </div>
 
+            {/* STEP 2 — VIDEO SETTINGS */}
             {uploadedVideo && (
-              <div className="p-4 bg-surface-elevated rounded-xl border border-border">
-                <p className="text-sm text-muted-foreground mb-2">Asset Type</p>
-                <p className="text-foreground font-medium capitalize">{assetType}</p>
+              <div className="space-y-4 animate-in fade-in duration-500">
+                <h3 className="text-xs font-bold text-neon tracking-wider pt-4 border-t border-border/50">
+                  STEP 2 — VIDEO SETTINGS
+                </h3>
+
+                {/* Metadata Readout */}
+                <div className="p-4 bg-surface-elevated rounded-xl border border-border/50">
+                  <p className="text-xs text-muted-foreground mb-3">Asset Information</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Type:</span>
+                      <span className="text-foreground font-medium capitalize">{assetType}</span>
+                    </div>
+                    {assetType === "video" && duration > 0 && (
+                      <>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Duration:</span>
+                          <span className="text-foreground font-medium">{formatTime(duration)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Resolution:</span>
+                          <span className="text-foreground font-medium">1920×1080</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">FPS:</span>
+                          <span className="text-foreground font-medium">30</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Frame Controls */}
+                {assetType === "video" && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm text-foreground font-medium block mb-3 flex items-center justify-between">
+                        <span>Start Frame</span>
+                        <span className="text-xs text-neon">{formatTime(0)}</span>
+                      </label>
+                      <Slider 
+                        disabled 
+                        defaultValue={[0]} 
+                        max={100} 
+                        step={1}
+                        className="[&_[role=slider]]:border-neon [&_[role=slider]]:bg-neon"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-foreground font-medium block mb-3 flex items-center justify-between">
+                        <span>End Frame</span>
+                        <span className="text-xs text-neon">{formatTime(duration)}</span>
+                      </label>
+                      <Slider 
+                        disabled 
+                        defaultValue={[100]} 
+                        max={100} 
+                        step={1}
+                        className="[&_[role=slider]]:border-neon [&_[role=slider]]:bg-neon"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
-
-            {/* Video Inspector Placeholder */}
-            <div className="pt-4 border-t border-border">
-              <h3 className="text-sm font-bold text-neon mb-4">VIDEO SETTINGS</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm text-muted-foreground block mb-2">
-                    Start Frame
-                  </label>
-                  <Slider disabled defaultValue={[0]} max={100} step={1} />
-                </div>
-                <div>
-                  <label className="text-sm text-muted-foreground block mb-2">
-                    End Frame
-                  </label>
-                  <Slider disabled defaultValue={[100]} max={100} step={1} />
-                </div>
-              </div>
-            </div>
           </div>
         </aside>
 
-        {/* CENTER + BOTTOM - Video Canvas and Timeline */}
-        <div className="flex-1 flex flex-col">
-          {/* CENTER - Video Canvas */}
-          <div className="flex-1 bg-background flex items-center justify-center p-8">
-            {uploadedVideo ? (
-              <div className="relative w-full max-w-5xl aspect-video bg-surface rounded-xl overflow-hidden border border-border">
-                {assetType === "video" ? (
-                  <video
-                    ref={videoRef}
-                    src={uploadedVideo}
-                    className="w-full h-full object-contain"
-                    onTimeUpdate={handleTimeUpdate}
-                    onLoadedMetadata={handleLoadedMetadata}
-                  />
-                ) : (
-                  <img
-                    src={uploadedVideo}
-                    alt="Uploaded"
-                    className="w-full h-full object-contain"
-                  />
-                )}
+        {/* Collapse Toggle for Left Panel (when collapsed) */}
+        {leftPanelCollapsed && (
+          <button
+            onClick={() => setLeftPanelCollapsed(false)}
+            className="absolute left-0 top-20 z-10 bg-surface-elevated border border-border rounded-r-lg p-2 hover:bg-muted transition-colors"
+          >
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          </button>
+        )}
 
-                {/* Video Controls Overlay */}
+        {/* CENTER + BOTTOM - Video Canvas and Timeline */}
+        <div className="flex-1 flex flex-col border-r border-border/50">
+          {/* CENTER - Video Canvas */}
+          <div className="flex-1 bg-background flex flex-col items-center justify-center p-8">
+            {uploadedVideo ? (
+              <div className="w-full max-w-5xl space-y-4 animate-in fade-in duration-500">
+                {/* Video Canvas */}
+                <div className="relative w-full aspect-video bg-surface rounded-xl overflow-hidden border border-border shadow-2xl">
+                  {assetType === "video" ? (
+                    <video
+                      ref={videoRef}
+                      src={uploadedVideo}
+                      className="w-full h-full object-contain"
+                      onTimeUpdate={handleTimeUpdate}
+                      onLoadedMetadata={handleLoadedMetadata}
+                    />
+                  ) : (
+                    <img
+                      src={uploadedVideo}
+                      alt="Uploaded"
+                      className="w-full h-full object-contain"
+                    />
+                  )}
+
+                  {/* Safe Frame Overlay */}
+                  {showSafeFrames && (
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute inset-[10%] border-2 border-neon/30 border-dashed" />
+                      <div className="absolute inset-[5%] border border-neon/20" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Playback Toolbar */}
                 {assetType === "video" && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/90 to-transparent p-4">
+                  <div className="bg-surface-elevated rounded-xl border border-border/50 p-4">
                     <div className="flex items-center gap-4">
                       <Button
                         size="icon"
                         variant="ghost"
                         onClick={togglePlayPause}
-                        className="text-foreground hover:text-neon"
+                        className="text-foreground hover:text-neon hover:bg-neon/10 transition-all"
                       >
                         {isPlaying ? (
                           <Pause className="w-5 h-5" />
@@ -210,7 +318,7 @@ export default function ProEditor() {
                         )}
                       </Button>
 
-                      <span className="text-sm text-foreground">
+                      <span className="text-sm text-neon font-mono min-w-[60px]">
                         {formatTime(currentTime)}
                       </span>
 
@@ -222,14 +330,25 @@ export default function ProEditor() {
                         className="flex-1"
                       />
 
-                      <span className="text-sm text-foreground">
+                      <span className="text-sm text-muted-foreground font-mono min-w-[60px]">
                         {formatTime(duration)}
                       </span>
 
                       <div className="flex items-center gap-2">
-                        <Volume2 className="w-4 h-4 text-foreground" />
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={toggleMute}
+                          className="text-foreground hover:text-neon hover:bg-neon/10 transition-all"
+                        >
+                          {isMuted || volume === 0 ? (
+                            <VolumeX className="w-4 h-4" />
+                          ) : (
+                            <Volume2 className="w-4 h-4" />
+                          )}
+                        </Button>
                         <Slider
-                          value={[volume]}
+                          value={[isMuted ? 0 : volume]}
                           max={1}
                           step={0.1}
                           onValueChange={handleVolumeChange}
@@ -241,7 +360,7 @@ export default function ProEditor() {
                         size="icon"
                         variant="ghost"
                         onClick={handleFullscreen}
-                        className="text-foreground hover:text-neon"
+                        className="text-foreground hover:text-neon hover:bg-neon/10 transition-all"
                       >
                         <Maximize className="w-4 h-4" />
                       </Button>
@@ -250,43 +369,84 @@ export default function ProEditor() {
                 )}
               </div>
             ) : (
-              <div className="text-center">
-                <Upload className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">
+              <div className="text-center border-2 border-dashed border-border/50 rounded-xl p-16 max-w-2xl">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-surface-elevated flex items-center justify-center">
+                  <Upload className="w-10 h-10 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground text-lg mb-2">
                   Upload a video or image to get started
+                </p>
+                <p className="text-muted-foreground/60 text-sm">
+                  Drag and drop or use the upload button on the left
                 </p>
               </div>
             )}
           </div>
 
           {/* BOTTOM - Timeline */}
-          <div className="h-48 border-t border-border bg-surface p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-neon">TIMELINE</h3>
+          <div className="h-96 border-t border-border/50 bg-surface/50 backdrop-blur-sm p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xs font-bold text-neon tracking-wider">TIMELINE</h3>
               <div className="flex gap-2">
-                <Button size="sm" variant="ghost" className="text-foreground">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="text-foreground bg-neon/10 border border-neon/30 hover:bg-neon/20"
+                >
                   Video
                 </Button>
-                <Button size="sm" variant="ghost" className="text-muted-foreground">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition-all"
+                >
                   Effects
                 </Button>
-                <Button size="sm" variant="ghost" className="text-muted-foreground">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition-all"
+                >
                   Text
                 </Button>
               </div>
             </div>
 
             {/* Timeline Track */}
-            <div className="bg-surface-elevated rounded-lg p-4 h-24 border border-border">
+            <div className="bg-surface-elevated/80 backdrop-blur rounded-xl p-6 h-64 border border-border/50">
               {uploadedVideo && assetType === "video" ? (
-                <div className="h-full flex items-center">
-                  <div className="w-full h-12 bg-card rounded border border-neon/30 flex items-center px-4">
-                    <span className="text-sm text-foreground">Video Track</span>
+                <div className="h-full space-y-4 animate-in fade-in duration-500">
+                  {/* Track Labels */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 text-xs text-muted-foreground font-medium">Video</div>
+                    <div className="flex-1 h-16 bg-gradient-to-r from-card to-card/50 rounded-lg border border-neon/30 shadow-lg relative overflow-hidden group">
+                      <div className="absolute inset-0 flex items-center px-4">
+                        <span className="text-sm text-foreground font-medium">Main Video Track</span>
+                      </div>
+                      {/* Hover Tooltip */}
+                      <div className="absolute inset-0 bg-neon/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {/* Draggable Handles */}
+                      <div className="absolute left-0 top-0 bottom-0 w-2 bg-neon cursor-ew-resize opacity-50 hover:opacity-100" />
+                      <div className="absolute right-0 top-0 bottom-0 w-2 bg-neon cursor-ew-resize opacity-50 hover:opacity-100" />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 text-xs text-muted-foreground font-medium">Effects</div>
+                    <div className="flex-1 h-12 bg-surface rounded-lg border border-border/30 border-dashed" />
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 text-xs text-muted-foreground font-medium">Text</div>
+                    <div className="flex-1 h-12 bg-surface rounded-lg border border-border/30 border-dashed" />
                   </div>
                 </div>
               ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                  Timeline will appear after video upload
+                <div className="h-full flex flex-col items-center justify-center">
+                  <Video className="w-12 h-12 text-muted-foreground/40 mb-3" />
+                  <p className="text-muted-foreground/60 text-sm">
+                    Timeline will appear after video upload
+                  </p>
                 </div>
               )}
             </div>
@@ -294,45 +454,74 @@ export default function ProEditor() {
         </div>
 
         {/* RIGHT PANEL - Prompt & Variations */}
-        <aside className="w-96 border-l border-border bg-surface overflow-y-auto">
+        <aside 
+          className={`border-l border-border/50 bg-surface overflow-y-auto transition-all duration-300 ${
+            rightPanelCollapsed ? 'w-0' : 'w-96'
+          }`}
+        >
           <div className="p-6 space-y-6">
-            <h3 className="text-sm font-bold text-neon">AI PROMPT</h3>
-            
-            <textarea
-              placeholder="Describe the video transformation you want..."
-              className="w-full min-h-[200px] bg-surface-elevated border border-border rounded-xl p-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-neon resize-none"
-            />
+            {/* Collapse Toggle */}
+            <button
+              onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
+              className="absolute -left-3 top-20 z-10 bg-surface-elevated border border-border rounded-full p-1 hover:bg-muted transition-colors"
+            >
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </button>
 
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Suggested Prompts</p>
-              <div className="flex flex-wrap gap-2">
-                {["Cinematic", "Slow Motion", "Fast Forward", "Color Grade", "Stabilize"].map(
-                  (preset) => (
-                    <Button
-                      key={preset}
-                      size="sm"
-                      variant="outline"
-                      className="border-neon/30 text-foreground hover:bg-neon hover:text-background"
-                    >
-                      {preset}
-                    </Button>
-                  )
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Button className="w-full bg-transparent border-2 border-neon text-neon hover:bg-neon hover:text-background font-bold">
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Rewrite Prompt
-              </Button>
+            {/* STEP 3 — AI TRANSFORMATION */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-neon tracking-wider">STEP 3 — AI TRANSFORMATION</h3>
               
-              <Button className="w-full bg-neon text-background hover:bg-neon-glow font-bold py-6 text-lg">
-                Generate Pro Video
-              </Button>
+              <div className="space-y-3">
+                <label className="text-sm text-foreground font-medium block">Prompt</label>
+                <textarea
+                  placeholder="Describe the video transformation you want..."
+                  className="w-full min-h-[240px] bg-surface-elevated border border-border/50 rounded-xl p-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-neon focus:border-neon resize-none transition-all"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-sm text-foreground font-medium block">Suggested Variants</label>
+                <div className="flex flex-wrap gap-2">
+                  {["Cinematic", "Slow Motion", "Fast Forward", "Color Grade", "Stabilize"].map(
+                    (preset) => (
+                      <Button
+                        key={preset}
+                        size="sm"
+                        variant="outline"
+                        className="border-neon/30 bg-neon/5 text-foreground hover:bg-neon hover:text-background hover:shadow-[0_0_15px_rgba(186,230,55,0.3)] transition-all"
+                      >
+                        {preset}
+                      </Button>
+                    )
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-4">
+                <Button className="w-full bg-transparent border-2 border-neon text-neon hover:bg-neon hover:text-background font-bold transition-all hover:shadow-[0_0_20px_rgba(186,230,55,0.3)]">
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Rewrite Prompt
+                </Button>
+                
+                <Button className="w-full bg-neon text-background hover:bg-neon-glow font-bold py-6 text-lg transition-all hover:shadow-[0_0_30px_rgba(186,230,55,0.4)] hover:scale-[1.02]">
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Generate Pro Video
+                </Button>
+              </div>
             </div>
           </div>
         </aside>
+
+        {/* Collapse Toggle for Right Panel (when collapsed) */}
+        {rightPanelCollapsed && (
+          <button
+            onClick={() => setRightPanelCollapsed(false)}
+            className="absolute right-0 top-20 z-10 bg-surface-elevated border border-border rounded-l-lg p-2 hover:bg-muted transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+          </button>
+        )}
       </div>
     </div>
   );
