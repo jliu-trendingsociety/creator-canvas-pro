@@ -41,33 +41,32 @@ export const ZoomControls = ({ containerRef }: ZoomControlsProps) => {
   const isMaxZoom = zoom >= 4.0;
 
   return (
-    <div className="flex items-center gap-1 mb-2 justify-end">
+    <div className="flex items-center gap-1">
       <Button
-        variant="outline"
+        variant="ghost"
         size="sm"
         onClick={() => handleZoom(-0.2)}
         disabled={isMinZoom}
-        className="h-7 px-2 border-neon/30 hover:border-neon/60 hover:bg-neon/10 transition-all duration-100"
+        className="h-6 px-2 hover:bg-neon/10 hover:text-neon"
       >
         <ZoomOut className="w-3 h-3" />
       </Button>
       
       <Button
-        variant="outline"
+        variant="ghost"
         size="sm"
         onClick={handleReset}
-        className="h-7 px-3 border-neon/30 hover:border-neon/60 hover:bg-neon/10 transition-all duration-100 text-xs"
+        className="h-6 px-2 hover:bg-neon/10 hover:text-neon text-[10px] font-mono"
       >
-        <Maximize2 className="w-3 h-3 mr-1" />
         {(zoom * 100).toFixed(0)}%
       </Button>
       
       <Button
-        variant="outline"
+        variant="ghost"
         size="sm"
         onClick={() => handleZoom(0.2)}
         disabled={isMaxZoom}
-        className="h-7 px-2 border-neon/30 hover:border-neon/60 hover:bg-neon/10 transition-all duration-100"
+        className="h-6 px-2 hover:bg-neon/10 hover:text-neon"
       >
         <ZoomIn className="w-3 h-3" />
       </Button>

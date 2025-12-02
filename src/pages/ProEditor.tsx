@@ -588,8 +588,8 @@ export default function ProEditor() {
 
         {/* GLOBAL FULL-WIDTH TIMELINE */}
         <div 
-          className="w-full border-t border-border/40 bg-background/40 backdrop-blur-sm overflow-hidden"
-          style={{ height: '260px' }}
+          className="w-full border-t border-border/40 bg-background overflow-hidden"
+          style={{ height: '220px' }}
         >
           <TimelineContainer
             thumbnails={thumbnails}

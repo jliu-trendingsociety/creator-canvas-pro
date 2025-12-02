@@ -25,8 +25,9 @@ export const VideoTrack = ({
   const { zoom } = useTimelineStore();
   const baseThumbnailWidth = 80;
   const thumbnailWidth = baseThumbnailWidth * zoom;
+  
   return (
-    <div className="relative h-14">
+    <div className="absolute inset-0">
       <ThumbnailStrip
         thumbnails={thumbnails}
         duration={duration}
@@ -35,7 +36,6 @@ export const VideoTrack = ({
         endFrame={endFrame}
         onSeek={onSeek}
       />
-      <Playhead currentTime={currentTime} duration={duration} />
       <TrimHandles
         startFrame={startFrame}
         endFrame={endFrame}

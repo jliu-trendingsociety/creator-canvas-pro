@@ -26,26 +26,29 @@ export const TimelineRuler = ({ duration }: TimelineRulerProps) => {
   }
 
   return (
-    <div className="relative w-full h-8 border-b border-border/30 bg-muted/10 flex items-center overflow-hidden">
-      <div className="w-32 flex-shrink-0 border-r border-border/30 px-3 text-[10px] text-muted-foreground">
-        TIME
-      </div>
-      <div className="flex-1 relative">
-        {ticks.map((time) => {
-          const left = timeToPx(time, { duration, totalWidth: totalThumbnailWidth, zoom });
-          return (
-            <div
-              key={time}
-              className="absolute top-0 flex flex-col items-center"
-              style={{ left: `${left}px` }}
-            >
-              <div className="w-px h-2 bg-border/50" />
-              <span className="text-[9px] text-muted-foreground mt-0.5">
-                {formatTime(time)}
-              </span>
-            </div>
-          );
-        })}
+    <div className="flex w-full h-7 border-b border-border/30 bg-surface/20">
+      {/* Left spacer matching track header width */}
+      <div className="w-40 flex-shrink-0 border-r border-border/30 bg-surface/30" />
+      
+      {/* Ruler ticks area */}
+      <div className="flex-1 relative overflow-hidden">
+        <div className="absolute inset-0">
+          {ticks.map((time) => {
+            const left = timeToPx(time, { duration, totalWidth: totalThumbnailWidth, zoom });
+            return (
+              <div
+                key={time}
+                className="absolute top-0 flex flex-col items-start"
+                style={{ left: `${left}px` }}
+              >
+                <span className="text-[10px] text-muted-foreground font-mono px-1">
+                  {formatTime(time)}
+                </span>
+                <div className="w-px h-2 bg-border/50" />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
