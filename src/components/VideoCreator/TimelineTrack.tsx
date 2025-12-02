@@ -23,11 +23,15 @@ export const TimelineTrack = ({
   const [isDragging, setIsDragging] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [dragType, setDragType] = useState<'scrub' | 'start' | 'end' | null>(null);
+  const [totalThumbnailWidth, setTotalThumbnailWidth] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
+  const thumbnailsContainerRef = useRef<HTMLDivElement>(null);
 
   const effectiveEndFrame = endFrame ?? duration;
   const thumbnailWidth = 80;
   const thumbnailHeight = 45;
+  const thumbnailGap = 4;
 
   const handleMouseDown = (e: React.MouseEvent, type: 'scrub' | 'start' | 'end') => {
     e.preventDefault();
@@ -35,12 +39,40 @@ export const TimelineTrack = ({
     setDragType(type);
   };
 
+  // Compute total thumbnail width on mount and when thumbnails change
+  useEffect(() => {
+    if (thumbnailsContainerRef.current && thumbnails.length > 0) {
+      const width = thumbnails.length * thumbnailWidth + (thumbnails.length - 1) * thumbnailGap;
+      setTotalThumbnailWidth(width);
+    }
+  }, [thumbnails.length, thumbnailWidth, thumbnailGap]);
+
+  // Handle scroll to update playhead position
+  const handleScroll = () => {
+    if (trackRef.current) {
+      setScrollLeft(trackRef.current.scrollLeft);
+    }
+  };
+
+  // Recompute on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (thumbnailsContainerRef.current && thumbnails.length > 0) {
+        const width = thumbnails.length * thumbnailWidth + (thumbnails.length - 1) * thumbnailGap;
+        setTotalThumbnailWidth(width);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [thumbnails.length, thumbnailWidth, thumbnailGap]);
+
   const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging || !trackRef.current || !dragType) return;
+    if (!isDragging || !trackRef.current || !dragType || totalThumbnailWidth === 0) return;
 
     const rect = trackRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-    const percentage = x / rect.width;
+    const x = Math.max(0, Math.min(e.clientX - rect.left + scrollLeft, totalThumbnailWidth));
+    const percentage = x / totalThumbnailWidth;
     const time = percentage * duration;
 
     if (dragType === 'scrub') {
@@ -71,16 +103,23 @@ export const TimelineTrack = ({
         window.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, dragType, duration, startFrame, effectiveEndFrame, onSeek, onTrimChange]);
+  }, [isDragging, dragType, duration, startFrame, effectiveEndFrame, onSeek, onTrimChange, totalThumbnailWidth, scrollLeft]);
 
   const handleThumbnailClick = (index: number) => {
     const time = (index / thumbnails.length) * duration;
     onSeek(time);
   };
 
-  const currentPositionPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
-  const startPositionPercent = duration > 0 ? (startFrame / duration) * 100 : 0;
-  const endPositionPercent = duration > 0 ? (effectiveEndFrame / duration) * 100 : 100;
+  // Use pixel positioning instead of percentages
+  const currentPositionPx = duration > 0 && totalThumbnailWidth > 0 
+    ? (currentTime / duration) * totalThumbnailWidth 
+    : 0;
+  const startPositionPx = duration > 0 && totalThumbnailWidth > 0 
+    ? (startFrame / duration) * totalThumbnailWidth 
+    : 0;
+  const endPositionPx = duration > 0 && totalThumbnailWidth > 0 
+    ? (effectiveEndFrame / duration) * totalThumbnailWidth 
+    : totalThumbnailWidth;
 
   if (thumbnails.length === 0) {
     return (
@@ -101,10 +140,18 @@ export const TimelineTrack = ({
     <div className="flex-1 relative min-w-0">
       <div
         ref={trackRef}
-        className="relative h-16 bg-surface rounded-lg border border-border/30 overflow-hidden cursor-pointer"
+        className="relative h-16 bg-surface rounded-lg border border-border/30 overflow-x-auto overflow-y-hidden cursor-pointer pb-1"
         onMouseDown={(e) => handleMouseDown(e, 'scrub')}
+        onScroll={handleScroll}
       >
-        <div className="flex h-full min-w-full">
+        <div 
+          ref={thumbnailsContainerRef}
+          className="absolute top-0 left-0 flex flex-row whitespace-nowrap shrink-0 min-w-max"
+          style={{ 
+            width: totalThumbnailWidth > 0 ? `${totalThumbnailWidth}px` : 'auto',
+            gap: `${thumbnailGap}px`
+          }}
+        >
           {thumbnails.map((thumb, index) => {
             const timeAtThumb = (index / thumbnails.length) * duration;
             const isInTrimRange = timeAtThumb >= startFrame && timeAtThumb <= effectiveEndFrame;
@@ -154,21 +201,21 @@ export const TimelineTrack = ({
           })}
         </div>
 
-        {/* Current Position Indicator */}
+        {/* Current Position Indicator - Pixel Positioned */}
         <div
-          className="absolute top-0 bottom-0 w-0.5 bg-neon shadow-[0_0_10px_rgba(186,230,55,0.6)] pointer-events-none z-10"
-          style={{ left: `${currentPositionPercent}%` }}
+          className="absolute top-0 bottom-0 w-0.5 bg-neon shadow-[0_0_10px_rgba(186,230,55,0.6)] pointer-events-none z-30"
+          style={{ left: `${currentPositionPx}px` }}
         >
           <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-neon rounded-full shadow-[0_0_8px_rgba(186,230,55,0.8)]" />
         </div>
 
-        {/* Trim Handles */}
+        {/* Trim Handles - Pixel Positioned */}
         {onTrimChange && (
           <>
             {/* Start Handle */}
             <div
-              className="absolute top-0 bottom-0 w-2 bg-neon/80 cursor-ew-resize hover:bg-neon z-20 group"
-              style={{ left: `${startPositionPercent}%` }}
+              className="absolute top-0 bottom-0 w-2 bg-neon/80 cursor-ew-resize hover:bg-neon z-40 group"
+              style={{ left: `${startPositionPx}px` }}
               onMouseDown={(e) => {
                 e.stopPropagation();
                 handleMouseDown(e, 'start');
@@ -181,8 +228,8 @@ export const TimelineTrack = ({
 
             {/* End Handle */}
             <div
-              className="absolute top-0 bottom-0 w-2 bg-neon/80 cursor-ew-resize hover:bg-neon z-20 group"
-              style={{ left: `${endPositionPercent}%` }}
+              className="absolute top-0 bottom-0 w-2 bg-neon/80 cursor-ew-resize hover:bg-neon z-40 group"
+              style={{ left: `${endPositionPx}px` }}
               onMouseDown={(e) => {
                 e.stopPropagation();
                 handleMouseDown(e, 'end');
@@ -193,17 +240,17 @@ export const TimelineTrack = ({
               </div>
             </div>
 
-            {/* Trimmed Region Overlay */}
+            {/* Trimmed Region Overlay - Pixel Positioned */}
             {startFrame > 0 && (
               <div
-                className="absolute top-0 bottom-0 bg-background/60 pointer-events-none z-10"
-                style={{ left: 0, width: `${startPositionPercent}%` }}
+                className="absolute top-0 bottom-0 bg-background/60 pointer-events-none z-20"
+                style={{ left: 0, width: `${startPositionPx}px` }}
               />
             )}
             {effectiveEndFrame < duration && (
               <div
-                className="absolute top-0 bottom-0 bg-background/60 pointer-events-none z-10"
-                style={{ left: `${endPositionPercent}%`, right: 0 }}
+                className="absolute top-0 bottom-0 bg-background/60 pointer-events-none z-20"
+                style={{ left: `${endPositionPx}px`, width: `${totalThumbnailWidth - endPositionPx}px` }}
               />
             )}
           </>
