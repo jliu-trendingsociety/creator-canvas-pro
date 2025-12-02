@@ -22,6 +22,7 @@ import { useVideoThumbnails } from '@/hooks/useVideoThumbnails';
 import { TimelineContainer } from '@/editor/pro/timeline/ui/TimelineContainer';
 import { useToast } from '@/hooks/use-toast';
 import { useTimelineStore } from '@/editor/pro/timeline/state/timelineStore';
+import { useEditorStore } from '@/editor/pro/state/editorStore';
 import { RenderEngine as LegacyRenderEngine } from '@/editor/pro/renderer/RenderEngine';
 import { RenderEngine } from '@/editor/pro/renderer/engine/RenderEngine';
 import { MasterCanvas } from '@/editor/pro/renderer/components/MasterCanvas';
@@ -81,17 +82,28 @@ export default function ProEditor() {
   // ========================
   const { toast } = useToast();
   const { tracks } = useTimelineStore();
+  const {
+    uploadedAssetUrl,
+    assetType,
+    leftPanelCollapsed,
+    rightPanelCollapsed,
+    viewerFocusMode,
+    showSafeFrames,
+    isUploadDragging,
+    setUploadedAsset,
+    clearUploadedAsset,
+    setLeftPanelCollapsed,
+    setRightPanelCollapsed,
+    setViewerFocusMode,
+    toggleViewerFocusMode,
+    setShowSafeFrames,
+    setIsUploadDragging,
+  } = useEditorStore();
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const legacyRenderEngineRef = useRef<LegacyRenderEngine | null>(null);
   const renderEngine = useRef(new RenderEngine()).current;
-
-  // ========================
-  // State: Video Asset
-  // ========================
-  const [uploadedVideo, setUploadedVideo] = useState<string | null>(null);
-  const [assetType, setAssetType] = useState<'video' | 'image' | null>(null);
 
   // ========================
   // State: Playback
@@ -103,17 +115,8 @@ export default function ProEditor() {
   const [isMuted, setIsMuted] = useState(false);
 
   // ========================
-  // State: UI Layout
-  // ========================
-  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
-  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
-  const [viewerFocusMode, setViewerFocusMode] = useState(false);
-  const [showSafeFrames, setShowSafeFrames] = useState(false);
-
-  // ========================
   // State: Trim & Timeline
   // ========================
-  const [isDragging, setIsDragging] = useState(false);
   const [startFrame, setStartFrame] = useState(0);
   const [endFrame, setEndFrame] = useState(0);
 
@@ -153,7 +156,7 @@ export default function ProEditor() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [viewerFocusMode]);
+  }, [viewerFocusMode, setViewerFocusMode]);
 
   // ========================
   // Effects: Asset Thumbnail Extraction
@@ -174,7 +177,7 @@ export default function ProEditor() {
    */
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
+    setIsUploadDragging(false);
 
     const files = e.dataTransfer.files;
     if (files.length > 0) {
@@ -187,12 +190,11 @@ export default function ProEditor() {
    * Detects asset type and creates object URL.
    */
   const handleFileUpload = (file: File) => {
-    const assetType = detectAssetType(file.type);
-    if (!assetType) return;
+    const type = detectAssetType(file.type);
+    if (!type) return;
 
-    setAssetType(assetType);
     const url = URL.createObjectURL(file);
-    setUploadedVideo(url);
+    setUploadedAsset(url, type);
   };
 
   /**
@@ -420,12 +422,12 @@ export default function ProEditor() {
                 onDrop={handleDrop}
                 onDragOver={(e) => {
                   e.preventDefault();
-                  setIsDragging(true);
+                  setIsUploadDragging(true);
                 }}
-                onDragLeave={() => setIsDragging(false)}
+                onDragLeave={() => setIsUploadDragging(false)}
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
-                  isDragging
+                  isUploadDragging
                     ? 'border-neon bg-neon/10 shadow-[0_0_20px_rgba(186,230,55,0.2)]'
                     : 'border-border hover:border-neon/50 hover:bg-surface-elevated'
                 }`}>
@@ -458,7 +460,7 @@ export default function ProEditor() {
             </div>
 
             {/* STEP 2 — VIDEO SETTINGS */}
-            {uploadedVideo && (
+            {uploadedAssetUrl && (
               <div className='space-y-4 animate-in fade-in duration-500'>
                 <h3 className='text-xs font-bold text-neon tracking-wider pt-4 border-t border-border/50'>
                   STEP 2 — VIDEO SETTINGS
@@ -552,7 +554,7 @@ export default function ProEditor() {
             className={`bg-background flex items-center justify-center transition-all duration-200 ease-in-out ${
               viewerFocusMode ? 'flex-1 p-5' : 'flex-[0.6] p-4 md:p-8'
             }`}>
-            {uploadedVideo ? (
+            {uploadedAssetUrl ? (
               <div className='w-full h-full flex flex-col gap-4 animate-in fade-in duration-500'>
                 {/* Video Canvas Header with Focus Mode Toggle */}
                 <div className='flex items-center justify-between'>
@@ -564,7 +566,7 @@ export default function ProEditor() {
                   <Button
                     size='sm'
                     variant='ghost'
-                    onClick={() => setViewerFocusMode(!viewerFocusMode)}
+                    onClick={() => toggleViewerFocusMode()}
                     className='text-foreground hover:text-neon hover:bg-neon/10 transition-all'
                     title={
                       viewerFocusMode
@@ -602,7 +604,7 @@ export default function ProEditor() {
                     ) : assetType === 'video' ? (
                       <video
                         ref={videoRef}
-                        src={uploadedVideo}
+                        src={uploadedAssetUrl}
                         className='w-full h-full object-contain'
                         onTimeUpdate={handleTimeUpdate}
                         onLoadedMetadata={handleLoadedMetadata}
@@ -610,7 +612,7 @@ export default function ProEditor() {
                     ) : assetType === 'image' ? (
                       <video
                         ref={videoRef}
-                        src={uploadedVideo}
+                        src={uploadedAssetUrl}
                         className='w-full h-full object-contain'
                       />
                     ) : null}
@@ -753,7 +755,7 @@ export default function ProEditor() {
 
             {/* Timeline Track */}
             <div className='bg-surface-elevated/80 backdrop-blur rounded-xl p-4 md:p-6 border border-border/50 space-y-4'>
-              {uploadedVideo && assetType === 'video' ? (
+              {uploadedAssetUrl && assetType === 'video' ? (
                 <div className='space-y-4 animate-in fade-in duration-500'>
                   {/* Video Track with Thumbnails */}
                   <div className='flex items-start gap-2 md:gap-4'>
