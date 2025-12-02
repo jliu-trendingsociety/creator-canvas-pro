@@ -1,5 +1,6 @@
 import { ControlPanel } from "@/components/VideoCreator/ControlPanel";
 import { WorkflowSteps } from "@/components/VideoCreator/WorkflowSteps";
+import { GallerySection } from "@/components/VideoCreator/GallerySection";
 import { Header } from "@/components/VideoCreator/Header";
 
 const Index = () => {
@@ -27,6 +28,8 @@ const Index = () => {
 
             <WorkflowSteps />
           </div>
+
+          <GallerySection />
         </main>
       </div>
     </div>
