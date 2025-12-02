@@ -1,46 +1,52 @@
-/**
- * TimelineRuler
- * Displays time markers and tick marks along the timeline
- */
-
-import { formatTime } from "../utils/time";
+import { useTimelineStore } from '../state/timelineStore';
+import { timeToPx } from '../core/coordinateSystem';
+import { formatTime } from '../utils/time';
 
 interface TimelineRulerProps {
-  zoom: number;
   duration: number;
-  totalWidth: number;
 }
 
-export const TimelineRuler = ({ zoom, duration, totalWidth }: TimelineRulerProps) => {
-  if (duration === 0 || totalWidth === 0) return null;
+export const TimelineRuler = ({ duration }: TimelineRulerProps) => {
+  const { zoom, totalThumbnailWidth } = useTimelineStore();
 
-  // Calculate tick interval based on zoom
-  const baseInterval = 1; // 1 second
-  const tickInterval = baseInterval / zoom;
-  const tickCount = Math.ceil(duration / tickInterval);
+  if (duration === 0 || totalThumbnailWidth === 0) return null;
+
+  // Calculate tick interval based on zoom level
+  const getTickInterval = () => {
+    if (zoom >= 2) return 1; // Every second at high zoom
+    if (zoom >= 1) return 5; // Every 5 seconds at medium zoom
+    return 10; // Every 10 seconds at low zoom
+  };
+
+  const tickInterval = getTickInterval();
+  const ticks: number[] = [];
   
-  const ticks = [];
-  for (let i = 0; i <= tickCount; i++) {
-    const time = i * tickInterval;
-    if (time > duration) break;
-    
-    const left = (time / duration) * totalWidth * zoom;
-    
-    ticks.push(
-      <div
-        key={i}
-        className="absolute top-0 h-full flex flex-col items-center text-[10px] text-muted-foreground"
-        style={{ left: `${left}px` }}
-      >
-        <div className="w-px h-2 bg-border" />
-        <span className="mt-0.5">{formatTime(time)}</span>
-      </div>
-    );
+  for (let time = 0; time <= duration; time += tickInterval) {
+    ticks.push(time);
   }
 
   return (
-    <div className="absolute top-0 left-0 w-full h-6 bg-background/50 border-b border-border/30 pointer-events-none z-10">
-      {ticks}
+    <div className="sticky top-0 left-0 w-full h-6 bg-background/95 border-b border-border/30 z-10 flex items-center">
+      <div className="w-32 flex-shrink-0 border-r border-border/30 px-3 text-[10px] text-muted-foreground">
+        TIME
+      </div>
+      <div className="flex-1 relative">
+        {ticks.map((time) => {
+          const left = timeToPx(time, { duration, totalWidth: totalThumbnailWidth, zoom });
+          return (
+            <div
+              key={time}
+              className="absolute top-0 flex flex-col items-center"
+              style={{ left: `${left}px` }}
+            >
+              <div className="w-px h-2 bg-border/50" />
+              <span className="text-[9px] text-muted-foreground mt-0.5">
+                {formatTime(time)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
