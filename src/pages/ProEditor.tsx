@@ -4,7 +4,7 @@ import { Upload, Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronLeft
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { useVideoThumbnails } from "@/hooks/useVideoThumbnails";
-import { TimelineTrack } from "@/components/VideoCreator/TimelineTrack";
+import { TimelineContainer } from "@/components/timeline/TimelineContainer";
 
 export default function ProEditor() {
   const [uploadedVideo, setUploadedVideo] = useState<string | null>(null);
@@ -479,7 +479,7 @@ export default function ProEditor() {
                   {/* Video Track with Thumbnails */}
                   <div className="flex items-start gap-2 md:gap-4">
                     <div className="w-16 md:w-20 text-xs text-muted-foreground font-medium pt-2 flex-shrink-0">Video</div>
-                    <TimelineTrack
+                    <TimelineContainer
                       thumbnails={thumbnails}
                       currentTime={currentTime}
                       duration={duration}
