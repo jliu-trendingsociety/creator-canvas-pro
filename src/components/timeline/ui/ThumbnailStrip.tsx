@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { useTimelineStore } from "../timelineStore";
 import { pxToTime } from "../coordinateSystem";
 import { formatTime } from "../timeEngine";
+import { ThumbnailHighlight } from "./ThumbnailHighlight";
 
 interface ThumbnailStripProps {
   thumbnails: string[];
@@ -56,16 +57,20 @@ export const ThumbnailStrip = ({
   }
 
   const totalWidth = thumbnails.length * thumbnailWidth + (thumbnails.length - 1) * thumbnailGap;
+  
+  // Calculate active index based on currentTime
+  const activeIndex = Math.floor((currentTime / duration) * thumbnails.length);
 
   return (
-    <div 
-      ref={containerRef}
-      className="absolute top-0 left-0 flex flex-row whitespace-nowrap shrink-0 min-w-max"
-      style={{ 
-        width: `${totalWidth}px`,
-        gap: `${thumbnailGap}px`
-      }}
-    >
+    <div className="relative">
+      <div 
+        ref={containerRef}
+        className="absolute top-0 left-0 flex flex-row whitespace-nowrap shrink-0 min-w-max"
+        style={{ 
+          width: `${totalWidth}px`,
+          gap: `${thumbnailGap}px`
+        }}
+      >
       {thumbnails.map((thumb, index) => {
         const timeAtThumb = (index / thumbnails.length) * duration;
         const isInTrimRange = timeAtThumb >= startFrame && timeAtThumb <= endFrame;
@@ -87,20 +92,10 @@ export const ThumbnailStrip = ({
               src={thumb}
               alt={`Frame ${index}`}
               className={cn(
-                "w-full h-full object-cover rounded transition-opacity duration-150",
+                "w-full h-full object-cover rounded transition-opacity duration-150 z-10",
                 !isInTrimRange && "opacity-40"
               )}
             />
-            
-            {/* Unified Highlight Border */}
-            {(hoveredIndex === index || isActive) && (
-              <div 
-                className={cn(
-                  "absolute inset-0 border-2 border-neon rounded pointer-events-none z-30",
-                  "transition-opacity duration-150"
-                )}
-              />
-            )}
             
             {/* Hover Preview */}
             {hoveredIndex === index && (
@@ -120,6 +115,16 @@ export const ThumbnailStrip = ({
           </div>
         );
       })}
+      </div>
+      
+      <ThumbnailHighlight
+        hoveredIndex={hoveredIndex}
+        activeIndex={activeIndex}
+        thumbnailWidth={thumbnailWidth}
+        thumbnailHeight={thumbnailHeight}
+        thumbnailGap={thumbnailGap}
+        containerRef={containerRef}
+      />
     </div>
   );
 };
