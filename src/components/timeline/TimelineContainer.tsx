@@ -55,7 +55,7 @@ export const TimelineContainer = ({
       <div
         id="timeline-container"
         ref={containerRef}
-        className="relative h-14 bg-surface rounded-lg border border-border/30 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-track-transparent scrollbar-thumb-neon/40 hover:scrollbar-thumb-neon/70"
+        className="timeline-scroll relative h-14 bg-surface rounded-lg border border-border/30"
         onScroll={handleScroll}
       >
         <VideoTrack
