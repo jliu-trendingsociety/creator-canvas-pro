@@ -73,3 +73,33 @@ export const indexToPx = (index: number, thumbnailWidth: number): number => {
 export const pxToIndex = (px: number, thumbnailWidth: number): number => {
   return Math.floor((px - TIMELINE_LEFT_OFFSET) / thumbnailWidth);
 };
+
+/**
+ * VERTICAL COORDINATE SYSTEM
+ * For multi-track vertical positioning
+ */
+
+/**
+ * Convert track index to Y offset
+ */
+export const trackIndexToY = (trackIndex: number, trackHeights: number[]): number => {
+  let yOffset = 0;
+  for (let i = 0; i < trackIndex; i++) {
+    yOffset += trackHeights[i] || 0;
+  }
+  return yOffset;
+};
+
+/**
+ * Convert Y coordinate to track index
+ */
+export const yToTrackIndex = (y: number, trackHeights: number[]): number => {
+  let currentY = 0;
+  for (let i = 0; i < trackHeights.length; i++) {
+    if (y >= currentY && y < currentY + trackHeights[i]) {
+      return i;
+    }
+    currentY += trackHeights[i];
+  }
+  return -1;
+};

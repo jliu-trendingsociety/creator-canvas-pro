@@ -32,7 +32,12 @@ export const timelineSelectors = {
 
   // Track selectors
   trackState: (state: TimelineState) => ({
-    trackHeights: state.trackHeights,
-    activeTrack: state.activeTrack,
+    tracks: state.tracks,
+    activeTrackId: state.activeTrackId,
+  }),
+
+  // Clip selectors
+  clipState: (state: TimelineState) => ({
+    selectedClipId: state.selectedClipId,
   }),
 };
