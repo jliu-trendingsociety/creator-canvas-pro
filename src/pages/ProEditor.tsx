@@ -26,12 +26,19 @@ import { RenderEngine as LegacyRenderEngine } from '@/editor/pro/renderer/Render
 import { RenderEngine } from '@/editor/pro/renderer/engine/RenderEngine';
 import { MasterCanvas } from '@/editor/pro/renderer/components/MasterCanvas';
 import { TimelineTrackData } from '@/editor/pro/renderer/engine/types';
+import type { Track, Clip } from '@/editor/pro/timeline/state/timelineStore';
 
-function mapTracksToRenderData(
-  tracks: TimelineTrackData['id'][] | any
-): TimelineTrackData[] {
-  return tracks.flatMap((track: any) =>
-    track.clips.map((clip: any) => ({
+// ========================
+// Helper Functions
+// ========================
+
+/**
+ * Maps timeline tracks to render engine format.
+ * Used for both render preparation and MasterCanvas rendering.
+ */
+function mapTracksToRenderData(tracks: Track[]): TimelineTrackData[] {
+  return tracks.flatMap((track) =>
+    track.clips.map((clip) => ({
       id: clip.id,
       type:
         track.type === 'video'
@@ -45,38 +52,78 @@ function mapTracksToRenderData(
     }))
   );
 }
+
+/**
+ * Formats time in seconds to MM:SS format.
+ */
+function formatTime(time: number): string {
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Determines media type from file MIME type.
+ */
+function detectAssetType(fileType: string): 'video' | 'image' | null {
+  if (fileType.startsWith('video/')) return 'video';
+  if (fileType.startsWith('image/')) return 'image';
+  return null;
+}
+
 // ========================
-// Local UI + Playback State
+// Main Component
 // ========================
+
 export default function ProEditor() {
+  // ========================
+  // State: Services & Refs
+  // ========================
   const { toast } = useToast();
-  const [uploadedVideo, setUploadedVideo] = useState<string | null>(null);
-  const [assetType, setAssetType] = useState<'video' | 'image' | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
-  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
-  const [viewerFocusMode, setViewerFocusMode] = useState(false);
-  const [showSafeFrames, setShowSafeFrames] = useState(false);
-  const [startFrame, setStartFrame] = useState(0);
-  const [endFrame, setEndFrame] = useState(0);
+  const { tracks } = useTimelineStore();
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const legacyRenderEngineRef = useRef<LegacyRenderEngine | null>(null);
   const renderEngine = useRef(new RenderEngine()).current;
 
-  const { tracks } = useTimelineStore();
+  // ========================
+  // State: Video Asset
+  // ========================
+  const [uploadedVideo, setUploadedVideo] = useState<string | null>(null);
+  const [assetType, setAssetType] = useState<'video' | 'image' | null>(null);
 
   // ========================
-  // Engine + Timeline Wiring
+  // State: Playback
+  // ========================
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+
+  // ========================
+  // State: UI Layout
+  // ========================
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
+  const [viewerFocusMode, setViewerFocusMode] = useState(false);
+  const [showSafeFrames, setShowSafeFrames] = useState(false);
+
+  // ========================
+  // State: Trim & Timeline
+  // ========================
+  const [isDragging, setIsDragging] = useState(false);
+  const [startFrame, setStartFrame] = useState(0);
+  const [endFrame, setEndFrame] = useState(0);
+
+  // ========================
+  // Effects: Engine Initialization
   // ========================
 
-  // Initialize legacy render engine
+  /**
+   * Initialize legacy render engine once on mount.
+   */
   useEffect(() => {
     if (!legacyRenderEngineRef.current) {
       legacyRenderEngineRef.current = new LegacyRenderEngine();
@@ -84,28 +131,19 @@ export default function ProEditor() {
     }
   }, []);
 
-  // Prepare render engine with timeline tracks
+  /**
+   * Prepare render engine with timeline tracks whenever they change.
+   */
   useEffect(() => {
     if (tracks.length > 0) {
-      const renderTracks: TimelineTrackData[] = tracks.flatMap((track) =>
-        track.clips.map((clip) => ({
-          id: clip.id,
-          type:
-            track.type === 'video'
-              ? ('video' as const)
-              : track.type === 'audio'
-              ? ('audio' as const)
-              : ('image' as const),
-          startTime: clip.start,
-          endTime: clip.end,
-          src: clip.src,
-        }))
-      );
+      const renderTracks = mapTracksToRenderData(tracks);
       renderEngine.prepare(renderTracks);
     }
   }, [tracks, renderEngine]);
 
-  // ESC key handler to exit focus mode
+  /**
+   * Handle ESC key to exit focus mode.
+   */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && viewerFocusMode) {
@@ -117,13 +155,23 @@ export default function ProEditor() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [viewerFocusMode]);
 
-  // Extract thumbnails from the uploaded video
+  // ========================
+  // Effects: Asset Thumbnail Extraction
+  // ========================
+
   const { thumbnails, isExtracting } = useVideoThumbnails({
     videoElement: videoRef.current,
     duration,
     thumbnailCount: 25,
   });
 
+  // ========================
+  // Handlers: File Upload
+  // ========================
+
+  /**
+   * Handle file drop event.
+   */
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
@@ -134,21 +182,22 @@ export default function ProEditor() {
     }
   };
 
+  /**
+   * Core file upload logic.
+   * Detects asset type and creates object URL.
+   */
   const handleFileUpload = (file: File) => {
-    const fileType = file.type;
+    const assetType = detectAssetType(file.type);
+    if (!assetType) return;
 
-    if (fileType.startsWith('video/')) {
-      setAssetType('video');
-    } else if (fileType.startsWith('image/')) {
-      setAssetType('image');
-    } else {
-      return;
-    }
-
+    setAssetType(assetType);
     const url = URL.createObjectURL(file);
     setUploadedVideo(url);
   };
 
+  /**
+   * Handle file input change event.
+   */
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -156,34 +205,50 @@ export default function ProEditor() {
     }
   };
 
+  // ========================
+  // Handlers: Playback
+  // ========================
+
+  /**
+   * Toggle play/pause state.
+   */
   const togglePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
+    if (!videoRef.current) return;
+
+    if (isPlaying) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play();
     }
+    setIsPlaying(!isPlaying);
   };
 
-  // Unified time update handler - SINGLE SOURCE OF TRUTH
+  /**
+   * Unified time sync from video element.
+   * Single source of truth for current playback time.
+   */
   const handleTimeUpdate = () => {
     if (videoRef.current) {
       setCurrentTime(videoRef.current.currentTime);
     }
   };
 
+  /**
+   * Handle metadata load (called when video duration is available).
+   */
   const handleLoadedMetadata = () => {
-    if (videoRef.current) {
-      const videoDuration = videoRef.current.duration;
-      setDuration(videoDuration);
-      setEndFrame(videoDuration);
-      setCurrentTime(0);
-    }
+    if (!videoRef.current) return;
+
+    const videoDuration = videoRef.current.duration;
+    setDuration(videoDuration);
+    setEndFrame(videoDuration);
+    setCurrentTime(0);
   };
 
-  // Unified seek handler - updates both state and video element
+  /**
+   * Unified seek handler.
+   * Updates both video element and playback state.
+   */
   const seekToTime = (time: number) => {
     const clampedTime = Math.max(0, Math.min(time, duration));
 
@@ -193,23 +258,94 @@ export default function ProEditor() {
     setCurrentTime(clampedTime);
   };
 
-  // Playback scrub bar handler
+  /**
+   * Handle playback scrub bar seek.
+   */
   const handleSeek = (value: number[] | number) => {
     const time = Array.isArray(value) ? value[0] : value;
     seekToTime(time);
   };
 
-  // Timeline thumbnail seek handler
+  /**
+   * Handle timeline click seek.
+   */
   const handleTimelineSeek = (time: number) => {
     seekToTime(time);
   };
 
-  // Trim change handler - updates trim points and optionally seeks
+  // ========================
+  // Handlers: Volume
+  // ========================
+
+  /**
+   * Handle volume slider change.
+   */
+  const handleVolumeChange = (value: number[]) => {
+    if (!videoRef.current) return;
+
+    const newVolume = value[0];
+    videoRef.current.volume = newVolume;
+    setVolume(newVolume);
+    setIsMuted(newVolume === 0);
+  };
+
+  /**
+   * Toggle mute state.
+   */
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    videoRef.current.volume = newMuted ? 0 : volume;
+  };
+
+  /**
+   * Request fullscreen playback.
+   */
+  const handleFullscreen = () => {
+    if (videoRef.current) {
+      videoRef.current.requestFullscreen();
+    }
+  };
+
+  // ========================
+  // Handlers: Trim
+  // ========================
+
+  /**
+   * Handle trim start frame change.
+   */
+  const handleStartFrameChange = (value: number[]) => {
+    const newStart = value[0];
+    setStartFrame(newStart);
+    seekToTime(newStart);
+  };
+
+  /**
+   * Handle trim end frame change.
+   */
+  const handleEndFrameChange = (value: number[]) => {
+    const newEnd = value[0];
+    setEndFrame(newEnd);
+    seekToTime(newEnd);
+  };
+
+  /**
+   * Handle trim boundaries update from timeline.
+   */
   const handleTrimChange = (start: number, end: number) => {
     setStartFrame(start);
     setEndFrame(end);
   };
 
+  // ========================
+  // Handlers: Rendering
+  // ========================
+
+  /**
+   * Generate and log render graph from timeline.
+   */
   const handleGenerateRenderPreview = () => {
     if (!legacyRenderEngineRef.current) {
       toast({
@@ -219,67 +355,21 @@ export default function ProEditor() {
       return;
     }
 
-    // Evaluate timeline and build render graph
     const graph = legacyRenderEngineRef.current.evaluateTimeline(
       tracks,
       duration
     );
 
-    // Log to console
     console.log('[ProEditor] Render Graph Generated:', graph);
 
-    // Show success toast
     toast({
       title: 'Render graph generated',
       description: `${graph.nodes.length} clips scheduled across ${graph.trackCount} tracks. Check console for details.`,
     });
   };
 
-  // Start/End frame slider handlers
-  const handleStartFrameChange = (value: number[]) => {
-    const newStart = value[0];
-    setStartFrame(newStart);
-    // Optionally seek to the new start frame for visual feedback
-    seekToTime(newStart);
-  };
-
-  const handleEndFrameChange = (value: number[]) => {
-    const newEnd = value[0];
-    setEndFrame(newEnd);
-    // Optionally seek to the new end frame for visual feedback
-    seekToTime(newEnd);
-  };
-
-  const handleVolumeChange = (value: number[]) => {
-    if (videoRef.current) {
-      videoRef.current.volume = value[0];
-      setVolume(value[0]);
-      setIsMuted(value[0] === 0);
-    }
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      const newMuted = !isMuted;
-      setIsMuted(newMuted);
-      videoRef.current.volume = newMuted ? 0 : volume;
-    }
-  };
-
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const handleFullscreen = () => {
-    if (videoRef.current) {
-      videoRef.current.requestFullscreen();
-    }
-  };
-
   // ========================
-  // Layout Composition Shell
+  // Layout Composition
   // ========================
   return (
     <div className='min-h-screen w-full flex flex-col bg-background'>
@@ -506,20 +596,7 @@ export default function ProEditor() {
                         engine={renderEngine}
                         getState={() => ({
                           currentTime,
-                          tracks: tracks.flatMap((track) =>
-                            track.clips.map((clip) => ({
-                              id: clip.id,
-                              type:
-                                track.type === 'video'
-                                  ? ('video' as const)
-                                  : track.type === 'audio'
-                                  ? ('audio' as const)
-                                  : ('image' as const),
-                              startTime: clip.start,
-                              endTime: clip.end,
-                              src: clip.src,
-                            }))
-                          ),
+                          tracks: mapTracksToRenderData(tracks),
                         })}
                       />
                     ) : assetType === 'video' ? (

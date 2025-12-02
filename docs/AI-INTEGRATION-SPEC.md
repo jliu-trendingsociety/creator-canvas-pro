@@ -1,202 +1,165 @@
-
-# AI-INTEGRATION-SPEC.md  
-**Trending Society – AI Integration Specification for Creator OS & ProEditor**  
+# AI-INTEGRATION-SPEC.md
+**Trending Society – AI Integration Specification**  
 Location: `docs/AI-INTEGRATION-SPEC.md`
 
-This document defines how AI services are integrated into **Creator Canvas Pro (ProEditor)** and the broader **Trending Society Creator OS**, using a future-proof, multi-provider stack:
-
-- OpenAI + Anthropic (Claude) – core reasoning, agents, instructions
-- Perplexity + Tavily + Decart – retrieval, research, data enrichment
-- Replicate – heavy model inference (vision, video, diffusion, upscaling)
-- ElevenLabs – voice generation
-- Decart AI – structured financial / data analysis (as per platform.decart.ai)
-- n8n – automation & orchestration
-- Cloudflare Queues + Workers – background jobs & edge orchestration
-- Supabase – storage, auth, vector search
-- Cloudinary – media CDN + transformations
-
-This spec sits on top of:
-
-- `.github/copilot-instructions.md`  
-- `PROEDITOR-ARCHITECTURE.md`  
-- `PROEDITOR-REFACTOR-PLAN.md`  
-- `PROEDITOR-COMMANDS-SPEC.md`  
-- `TIMELINE-ENGINE-SPEC.md`  
-- `RENDER-ENGINE-SPEC.md`  
+This document defines how AI capabilities are integrated into the Creator OS and ProEditor.  
+It covers LLM usage, tool access, safety, and how agents coordinate with collaboration and infrastructure layers.
 
 ---
 
-# 1. AI Roles & Responsibilities
+## 1. Goals
 
-We treat AI services as **roles**, not just APIs.
-
-## 1.1 Core Reasoning & Orchestration
-
-**Providers:**
-- OpenAI (GPT-4.x, 4.1 mini)
-- Anthropic (Claude)
-
-Uses:
-- Editor assistants (contextual help, prompts)
-- Agent orchestration (deciding which tools to call)
-- Transform recipes (e.g. “turn this clip into X style”)
-- System planning (long-running workflows)
-
-## 1.2 Web & Data Retrieval
-
-**Providers:**
-- Perplexity
-- Tavily
-- Decart (for financial / trading / numeric context)
-- Inoreader (RSS/content feeds)
-
-Uses:
-- Trend analysis
-- Market sentiment
-- Contextual overlays and explainers
-- “Smart” assist panels in Creator OS
-- Auto-tagging, captioning, contextual metadata generation
-
-## 1.3 Media Intelligence & Generation
-
-**Providers:**
-- Replicate
-- ElevenLabs
-- Future: additional Replicate-hosted custom models
-
-Uses:
-- Background removal, segmentation
-- Upscaling, interpolation
-- Video style transfer
-- Voice-over generation / dubbing
-- Audio enhancement
+- Treat AI as **first-class collaborators**, not one-off features.
+- Ensure deterministic, auditable behavior through Commands + Stores.
+- Allow pluggable models (OpenAI, Claude, Replicate, etc.).
+- Expose external tools via a unified protocol (**MCP**).
+- Make AI deeply aware of timeline, assets, identity, and collaboration context.
 
 ---
 
-# 2. Integration Principles
+## 2. Architectural Layers
 
-1. **No direct calls from UI:**  
-   All AI interactions go through:
-   - `agent-services/` modules, or  
-   - n8n workflows via HTTP / Webhooks, or  
-   - backend endpoints (Supabase functions / Vercel API routes / Cloudflare Workers).
-
-2. **Stateless frontends:**  
-   ProEditor and Creator OS frontends pass:
-   - job descriptions  
-   - references (IDs, URLs)  
-   - desired outputs  
-
-3. **Job-based workflow:**  
-   Heavy tasks use:
-   - Cloudflare Queues + Workers  
-   - n8n for high-level orchestration  
-
-4. **Observability required:**  
-   - Sentry for errors  
-   - PostHog for usage analytics / funnels  
+1. **Agent Runtime** – Long-lived agents and copilots.
+2. **Model Routing Layer** – Chooses the right model for each task.
+3. **Toolgraph & MCP Connectors** – External tools exposed via Model Context Protocol.
+4. **Commands Layer** – The only way AI mutates application state.
+5. **Collaboration Engine (Liveblocks)** – AI appears as a participant.
+6. **Distributed Compute (Cloudflare Queues)** – Heavy tasks offloaded from the request path.
 
 ---
 
-# 3. AI Call Path Patterns
+## 3. Context Surfaces
 
-## 3.1 Light, synchronous tasks (sub-2s)
+Agents should be able to see:
 
-Examples:
-- “Rewrite this title”
-- “Generate 5 hook variations”
-- “Summarize this transcript chunk”
+- **Identity context**
+  - Current user, team, roles, entitlements.
+- **Project context**
+  - Timeline structure, clips, markers, assets, comments.
+- **Collaboration context**
+  - Other participants in the room, their presence, and intents.
+- **Asset context**
+  - Asset metadata, embeddings, history, and relationships.
+- **Analytics context**
+  - Historical behavior, engagement metrics, and prior runs.
 
-Flow:
-Frontend → Vercel API Route / Supabase Function → OpenAI/Claude → Response → UI
-
-No queue used.
-
----
-
-## 3.2 Medium tasks (2–10s, not critical)
-
-Examples:
-- Short audio generation with ElevenLabs  
-- Image upscaling via Replicate  
-- Small caption generation batch  
-
-Flow:
-Frontend → API → Provider  
-UI shows spinner, but no persistent job record required.
+Context retrieval must be explicit and auditable.
 
 ---
 
-## 3.3 Heavy or batch tasks (10s+ or large)
+## 4. MCP – Tool Integration Standard
 
-Examples:
-- Full video stylization
-- Multi-clip processing
-- Large transcription or multi-model pipelines
+We use **Model Context Protocol (MCP)** as the canonical way to expose tools to LLMs.
 
-Flow:
-1. Frontend creates job record in Supabase (`jobs` table).
-2. API pushes message to **Cloudflare Queue** with job ID.
-3. Cloudflare Worker pulls message, runs n8n or direct provider calls.
-4. Job result stored in Supabase (status + result payload / asset URLs).
-5. Frontend polls job or uses WebSocket for updates.
+### 4.1. MCP Responsibilities
 
-This is the backbone pattern for Creator OS AI workflows.
+- Normalize access to:
+  - Stripe, Shopify, PayPal
+  - Airtable, Google Workspace, Jira, Confluence
+  - Discord, GitHub, Vercel, Cloudinary, n8n
+  - Tavily, Perplexity, Decart, Inoreader
+  - Any future SaaS we integrate
+- Enforce authentication, scopes, and rate limits.
+- Provide structured tool schemas that LLMs can call.
+
+### 4.2. Usage Pattern
+
+1. Agent receives a task.
+2. Agent selects tools via MCP (tool list / capabilities).
+3. Agent invokes tools with structured arguments.
+4. Tool responses are returned as JSON and logged.
+5. Agent decides which **Commands** to call in the OS based on results.
+
+UI must **never** call MCP tools directly; only Agents and Automation Engine should.
 
 ---
 
-# 4. Environment & Secrets
+## 5. Model Usage Patterns
 
-Environment variables must be:
+- **Fast reasoning / small edits** – GPT‑4.1‑mini or similar.
+- **Heavier planning, complex workflows** – GPT‑4.1 / Claude 3.5.
+- **Vision & image/video transformation prompts** – Replicate and other hosted models.
+- **Search & trend analysis** – Tavily + Perplexity + Decart.
 
-- UPPER_SNAKE_CASE
-- Grouped by provider
-- Never referenced directly in frontend
+Model selection is described in `MODEL-ROUTING-SPEC.md`.
 
-Examples:
+---
 
-```
-OPENAI_API_KEY
-ANTHROPIC_API_KEY
-REPLICATE_API_TOKEN
-ELEVENLABS_API_KEY
-PERPLEXITY_API_KEY
-TAVILY_API_KEY
-DECART_API_KEY
+## 6. Commands as the Mutation Boundary
 
-POSTHOG_API_KEY
-SENTRY_DSN
+All AI write operations must pass through the **Commands Layer**:
 
-CLOUDFLARE_ACCOUNT_ID
-CLOUDFLARE_API_TOKEN
-CLOUDFLARE_QUEUES_NAMESPACE
-
-SUPABASE_URL
-SUPABASE_SERVICE_ROLE_KEY
-
-CLOUDINARY_CLOUD_NAME
-CLOUDINARY_API_KEY
-CLOUDINARY_API_SECRET
+```ts
+commands.timeline.moveClip(...)
+commands.timeline.trimClip(...)
+commands.assets.createDerivedAsset(...)
+commands.marketplace.publishTemplate(...)
 ```
 
----
+Rules:
 
-# 5. Integration Targets in Codebase
-
-- `src/server/ai/` – primary AI orchestration layer
-- `src/server/jobs/` – job enqueue/dequeue logic
-- `src/server/agents/` – agent behaviors / tool definitions
-- `n8n workflows` – multi-step orchestration for complex flows
-
----
-
-# 6. Safety & Cost Controls
-
-- Rate limiting via Cloudflare / API layer  
-- Cost-aware routing (e.g. use GPT-4.1-mini by default)  
-- Guardrails on max input size, max output size  
-- Timeouts with retries via Cloudflare Queues / n8n  
+- Agents must **never** mutate Zustand stores directly.
+- Any irreversible operation should have:
+  - an audit log entry,
+  - an optional dry-run mode,
+  - and/or a “suggestion” path instead of immediate apply.
 
 ---
 
-# END OF AI INTEGRATION SPEC
+## 7. Liveblocks Integration (LLM-Driven Collaboration)
+
+AI Copilots participate in rooms:
+
+- Join via Liveblocks with `role: 'agent'`.
+- Update `aiStatus` as `"thinking" | "editing" | "idle" | "error"`.
+- Use comments and threads for:
+  - Suggested cuts and transitions.
+  - Script rewrites.
+  - Feedback summaries.
+
+Flow:
+
+1. Agent inspects room context (presence, comments).
+2. Agent posts suggestions via comments or AI threads.
+3. On approval or auto-apply, agent issues Commands for mutations.
+
+---
+
+## 8. Cloudflare Queues & Long-Running Tasks
+
+Heavy tasks (multi-minute inference, batch renders, ingest pipelines) must:
+
+1. Be scheduled via **Cloudflare Queues**.
+2. Report progress via:
+   - Status records in Supabase
+   - Optional Liveblocks status messages
+3. Write final results back into the Asset Graph and Timeline/Project state.
+
+Examples:
+
+- Render full-resolution exports
+- Generate multi-variant social clips
+- Batch transcription/translation
+
+---
+
+## 9. Safety & Guardrails
+
+- Enforce **role-based access controls** at the command layer.
+- Tools via MCP must be permission-scoped per user/tenant.
+- Rate limit high-impact operations.
+- Maintain full audit logs:
+  - Agent ID
+  - Command called
+  - Arguments (redacted where needed)
+  - Tool invocations and responses
+
+---
+
+## 10. Testing & Evaluation
+
+- Offline evaluation sets for core workflows (editing, summarizing, planning).
+- Shadow/degraded modes where AI suggestions are logged but not executed.
+- A/B tests for comparing models or strategies (via PostHog).
+
+This spec should be updated whenever we add major new AI capabilities, new MCP tools, or new modules in the Creator OS.

@@ -1,114 +1,161 @@
-
-# ASSET-PROCESSING-PIPELINE.md  
-**Trending Society – Asset Processing Pipeline for Creator OS**  
+# ASSET-PROCESSING-PIPELINE.md
+**Trending Society – Asset Processing Pipeline**  
 Location: `docs/ASSET-PROCESSING-PIPELINE.md`
 
-This document defines how assets (video, audio, images, docs) are ingested, processed, transformed, and stored.
-
-It connects:
-
-- ProEditor
-- Cloudinary
-- Supabase
-- Replicate
-- ElevenLabs
-- n8n
-- Cloudflare Queues
+This document defines how assets (video, audio, images, documents, templates, etc.) flow through the Creator OS from upload to publish.
 
 ---
 
-# 1. Asset Lifecycle Overview
+## 1. Goals
+
+- Provide a consistent, observable pipeline for all asset types.
+- Make assets immediately useful to ProEditor, agents, and marketplace.
+- Enable advanced search, recommendation, and automation using metadata and embeddings.
+- Support distributed processing via Cloudflare Queues.
+
+---
+
+## 2. High-Level Stages
 
 1. **Ingest**
-   - From upload, Discord, Dropbox, Google Drive, etc.
-2. **Normalize**
-   - Convert to standard formats / codecs.
-3. **Store**
-   - Raw → Supabase or Cloudinary (depending on use).
-4. **Process**
-   - Thumbnails, waveforms, transcodes, AI transforms.
-5. **Index**
-   - Metadata + embeddings in Supabase.
-6. **Use in ProEditor**
-   - Timeline clips, overlays, effects.
+2. **Validation & Normalization**
+3. **Transcode / Derive**
+4. **Thumbnail & Preview Generation**
+5. **Metadata & Embedding Indexing**
+6. **Storage & Graph Registration**
+7. **Publication & Distribution**
 
 ---
 
-# 2. Ingest
+## 3. Stage Details
 
-Sources:
-- Direct upload in ProEditor
-- Linked storage (Cloudinary URLs)
-- External imports (YouTube, Discord, Google Drive, etc.)
+### 3.1. Ingest
 
-Rules:
-- Always assign a globally unique `asset_id`.
-- Store canonical metadata in Supabase (`assets` table).
+Triggered by:
+
+- Direct uploads from ProEditor or web UI.
+- Imports from connected platforms (e.g. Dropbox, Google Drive) via MCP tools.
+- Automation workflows (e.g. watch a folder, ingest from RSS/Inoreader).
+
+Responsibilites:
+
+- Accept file or remote URL.
+- Create temporary ingest record.
+- Enqueue processing job in **Cloudflare Queues**.
+
+### 3.2. Validation & Normalization
+
+- Validate file type, size, and integrity.
+- Normalize container/codec when needed.
+- Extract basic technical metadata:
+  - Duration
+  - Resolution
+  - Frame rate
+  - Audio channels
+
+Failures at this stage mark ingest records as errored and notify the user.
+
+### 3.3. Transcode / Derive
+
+Based on asset type and target use cases:
+
+- Generate web-friendly mezzanine formats.
+- Optionally keep archival/original formats.
+- For audio:
+  - Normalize loudness.
+  - Extract mono/surround tracks if needed.
+
+This stage is heavily queue-driven.
+
+### 3.4. Thumbnail & Preview Generation
+
+- Generate poster frames and timeline thumbnails.
+- Generate low-resolution preview streams for fast editing.
+- For templates/effects:
+  - Generate preview images or short demo clips.
+
+All preview URLs are stored in the Asset Graph.
+
+### 3.5. Metadata & Embedding Indexing
+
+This stage makes assets **intelligent** and searchable.
+
+**Metadata**
+
+- Human-visible:
+  - Title, description, tags, language.
+- Technical:
+  - Codec, bitrate, duration, resolution, framerate.
+
+**Semantic data**
+
+For each asset, we may compute:
+
+```ts
+embeddings: number[];            // vector representation
+semanticLabels: string[];        // e.g. ['talking head', 'coding', 'night city']
+detectedFaces?: DetectedFace[];  // if allowed
+detectedObjects?: string[];
+transcriptId?: string;           // for speech ASR
+```
+
+Embedding and labeling models are chosen via `MODEL-ROUTING-SPEC.md`.
+
+Outputs are stored in:
+
+- Vector index (for semantic search & recommendations)
+- Metadata tables (for filtering and rules)
+
+### 3.6. Storage & Graph Registration
+
+- Upload finalized variants and previews to storage (Cloudinary / Supabase / S3).
+- Register assets in the **Asset Graph**:
+  - Assign `asset_id`.
+  - Record lineage (which ingest job produced this asset).
+  - Link to owner and organization.
+  - Link to any parent assets (e.g. derived from original footage).
+
+### 3.7. Publication & Distribution
+
+Assets can then be:
+
+- Used in ProEditor timelines.
+- Offered as templates/packs in the Marketplace.
+- Published to external platforms:
+  - YouTube, TikTok, Instagram, etc. via MCP tools and Automation Engine.
+- Embedded into white-label creator portals.
+
+Publication events are logged for analytics and may trigger further automations.
 
 ---
 
-# 3. Storage Rules
+## 4. Integration Points
 
-- **Cloudinary**:
-  - Public-facing, optimized media.
-  - Transformations for thumbnails, previews.
-
-- **Supabase Storage**:
-  - Raw or semi-processed files.
-  - Versioned if necessary.
-
-URLs are always referenced via:
-- `asset_id` → storage mapping
+- **Automation Engine** – defines pipelines for ingestion and publication.
+- **Agent Runtime** – can reason over assets using metadata/embeddings, then propose edits or distributions.
+- **ProEditor** – consumes thumbnails, mezzanines, and metadata for timeline UX.
+- **Marketplace** – uses metadata & vectors for discovery and recommendation.
+- **Toolgraph (MCP)** – connects intake and distribution to external ecosystems.
 
 ---
 
-# 4. Processing Pipeline (Jobs)
+## 5. Observability
 
-Heavy operations:
-- Video transcoding
-- Background removal
-- Upscaling
-- Style transfer
-- Caption generation
-- Audio enhancement
+For each asset/job we track:
 
-These run as:
+- Job status (`pending`, `processing`, `completed`, `failed`)
+- Steps completed and durations
+- Errors (via Sentry)
+- Usage metrics (how often asset is used, reused, sold, or derived from)
 
-1. Job created in Supabase (`jobs` table)
-2. Message sent to Cloudflare Queue
-3. Worker:
-   - Calls Replicate / ElevenLabs / ffmpeg / other APIs
-   - Stores result in storage
-   - Updates job + asset metadata
+This allows us to tune infrastructure (Cloudflare Queues, storage tiers) and optimize creator experience.
 
 ---
 
-# 5. Metadata & Indexing
+## 6. Future Extensions
 
-For each asset:
-- MIME type  
-- Duration (if media)  
-- Dimensions  
-- Source  
-- Owner (creator)  
-- Tags / labels  
-- Embeddings (for search)  
+- Per-tenant or per-project pipelines (custom steps per channel).
+- On-the-fly, just-in-time transcoding for certain workloads.
+- Active learning loops where agent feedback improves tagging and recommendations.
 
-All stored in Supabase.
-
----
-
-# 6. ProEditor Usage
-
-ProEditor never:
-- reads raw storage directly
-- performs heavy processing in the browser (beyond light WASM tasks)
-
-It uses:
-- asset metadata
-- URLs for playback
-- Commands to trigger processing jobs
-
----
-
-# END OF ASSET PROCESSING PIPELINE SPEC
+This pipeline is the backbone for all media in the Creator OS. Changes here must be made carefully and documented for downstream teams and agents.
