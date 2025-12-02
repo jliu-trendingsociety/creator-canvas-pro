@@ -437,12 +437,12 @@ export default function ProEditor() {
             </div>
 
             {/* Timeline Track */}
-            <div className="bg-surface-elevated/80 backdrop-blur rounded-xl p-6 h-52 border border-border/50">
+            <div className="bg-surface-elevated/80 backdrop-blur rounded-xl p-4 md:p-6 border border-border/50 space-y-4">
               {uploadedVideo && assetType === "video" ? (
-                <div className="h-full space-y-4 animate-in fade-in duration-500">
+                <div className="space-y-4 animate-in fade-in duration-500">
                   {/* Video Track with Thumbnails */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-20 text-xs text-muted-foreground font-medium">Video</div>
+                  <div className="flex items-start gap-2 md:gap-4">
+                    <div className="w-16 md:w-20 text-xs text-muted-foreground font-medium pt-2 flex-shrink-0">Video</div>
                     <TimelineTrack
                       thumbnails={thumbnails}
                       currentTime={currentTime}
@@ -457,14 +457,14 @@ export default function ProEditor() {
                     />
                   </div>
                   
-                  <div className="flex items-center gap-4">
-                    <div className="w-20 text-xs text-muted-foreground font-medium">Effects</div>
-                    <div className="flex-1 h-12 bg-surface rounded-lg border border-border/30 border-dashed" />
+                  <div className="flex items-start gap-2 md:gap-4">
+                    <div className="w-16 md:w-20 text-xs text-muted-foreground font-medium pt-2 flex-shrink-0">Effects</div>
+                    <div className="flex-1 h-12 bg-surface rounded-lg border border-border/30 border-dashed min-w-0" />
                   </div>
                   
-                  <div className="flex items-center gap-4">
-                    <div className="w-20 text-xs text-muted-foreground font-medium">Text</div>
-                    <div className="flex-1 h-12 bg-surface rounded-lg border border-border/30 border-dashed" />
+                  <div className="flex items-start gap-2 md:gap-4">
+                    <div className="w-16 md:w-20 text-xs text-muted-foreground font-medium pt-2 flex-shrink-0">Text</div>
+                    <div className="flex-1 h-12 bg-surface rounded-lg border border-border/30 border-dashed min-w-0" />
                   </div>
                 </div>
               ) : (

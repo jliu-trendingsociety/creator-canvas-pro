@@ -93,13 +93,13 @@ export const TimelineTrack = ({
   }
 
   return (
-    <div className="flex-1 relative">
+    <div className="flex-1 relative min-w-0">
       <div
         ref={trackRef}
-        className="relative h-16 bg-surface rounded-lg border border-border/30 overflow-x-auto overflow-y-hidden cursor-pointer"
+        className="relative h-16 bg-surface rounded-lg border border-border/30 overflow-hidden cursor-pointer"
         onMouseDown={(e) => handleMouseDown(e, 'scrub')}
       >
-        <div className="flex h-full">
+        <div className="flex h-full min-w-full">
           {thumbnails.map((thumb, index) => {
             const timeAtThumb = (index / thumbnails.length) * duration;
             const isInTrimRange = timeAtThumb >= startFrame && timeAtThumb <= effectiveEndFrame;
