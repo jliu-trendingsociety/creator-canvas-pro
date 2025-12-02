@@ -380,7 +380,7 @@ export default function ProEditor() {
 
           {/* CENTER - Video Canvas */}
           <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-            <div className="flex-1 bg-background flex flex-col items-center justify-center p-4 md:p-8">
+            <div className="flex-1 bg-background flex flex-col items-center justify-center p-4 md:p-8 min-h-[400px]">
               {uploadedVideo ? (
                 <div className="w-full max-w-5xl space-y-4 animate-in fade-in duration-500">
                   {/* Video Canvas - MasterCanvas Compositor */}
