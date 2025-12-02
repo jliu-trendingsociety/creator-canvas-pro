@@ -279,6 +279,7 @@ export const TimelineContainer = ({
                   endFrame={endFrame}
                   onSeek={onSeek}
                   onTrimChange={onTrimChange}
+                  videoSrc={thumbnails.length > 0 ? 'uploaded-video' : undefined}
                 />
               )}
             </div>
