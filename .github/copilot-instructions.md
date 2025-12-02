@@ -181,13 +181,14 @@ Located at: `src/editor/pro/layout/`
 Presentation-only components for ProEditor workspace zones:
 
 - **LeftPanel** - Upload zone, asset metadata, frame controls
-- **RightPanel** - AI prompts, generation controls  
+- **RightPanel** - AI prompts, generation controls
 - **ViewerContainer** - Video/canvas viewer, playback controls
 - **TimelineContainer** - Timeline tracks, thumbnails, tabs
 
 ### Layout Component Rules
 
 **Forbidden in layout components:**
+
 - State mutations (no useState, only props)
 - Zustand store access (props only)
 - Business logic (calculations, conditionals beyond render)
@@ -195,6 +196,7 @@ Presentation-only components for ProEditor workspace zones:
 - Pixel math or coordinate calculations
 
 **Allowed:**
+
 - Read state from props (read-only)
 - Call callbacks from props
 - Render UI based on prop values

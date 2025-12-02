@@ -1,4 +1,6 @@
 import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Video } from 'lucide-react';
 
 /**
  * TimelineContainer - Multi-track timeline with thumbnails
@@ -38,6 +40,7 @@ export const TimelineContainer: React.FC<TimelineContainerProps> = ({
   isExtracting,
   trackCount,
   onSeek,
+  onTabChange,
   children,
 }) => {
   return (
@@ -63,10 +66,27 @@ export const TimelineContainer: React.FC<TimelineContainerProps> = ({
           )}
         </div>
         <div className='flex gap-2'>
-          {/* Placeholder - tab buttons will be moved in Phase 3B */}
-          <button className='p-1'>Video</button>
-          <button className='p-1'>Effects</button>
-          <button className='p-1'>Text</button>
+          <Button
+            size='sm'
+            variant='ghost'
+            onClick={() => onTabChange?.('Video')}
+            className='text-foreground bg-neon/10 border border-neon/30 hover:bg-neon/20'>
+            Video
+          </Button>
+          <Button
+            size='sm'
+            variant='ghost'
+            onClick={() => onTabChange?.('Effects')}
+            className='text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition-all'>
+            Effects
+          </Button>
+          <Button
+            size='sm'
+            variant='ghost'
+            onClick={() => onTabChange?.('Text')}
+            className='text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition-all'>
+            Text
+          </Button>
         </div>
       </div>
 
@@ -74,11 +94,12 @@ export const TimelineContainer: React.FC<TimelineContainerProps> = ({
       <div className='bg-surface-elevated/80 backdrop-blur rounded-xl p-4 md:p-6 border border-border/50 space-y-4'>
         {uploadedAssetUrl && assetType === 'video' ? (
           <div className='space-y-4 animate-in fade-in duration-500'>
-            {/* Placeholder - timeline UI will be moved in Phase 3B */}
+            {/* Timeline UI component rendered as children */}
             {children}
           </div>
         ) : (
           <div className='h-full flex flex-col items-center justify-center'>
+            <Video className='w-12 h-12 text-muted-foreground/40 mb-3' />
             <p className='text-muted-foreground/60 text-sm'>
               Timeline will appear after video upload
             </p>
