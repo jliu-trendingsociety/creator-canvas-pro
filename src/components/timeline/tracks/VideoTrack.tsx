@@ -22,7 +22,7 @@ export const VideoTrack = ({
   onTrimChange,
 }: VideoTrackProps) => {
   return (
-    <div className="relative h-16">
+    <div className="relative h-14">
       <ThumbnailStrip
         thumbnails={thumbnails}
         duration={duration}
