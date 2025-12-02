@@ -6,6 +6,7 @@ import { TimelineRuler } from "./TimelineRuler";
 import { ZoomControls } from "./ZoomControls";
 import { Playhead } from "./Playhead";
 import { TrackLayoutEngine } from "../engine/tracks/TrackLayoutEngine";
+import { Video, Music } from "lucide-react";
 
 interface TimelineContainerProps {
   thumbnails: string[];
@@ -64,68 +65,75 @@ export const TimelineContainer = ({
     setSelectedClip(null);
   };
 
-  // Multi-track mode
-  if (tracks.length > 0) {
-    const totalHeight = trackLayouts.reduce((sum, layout) => sum + layout.height, 0);
-    
-    return (
-      <div className="w-full h-full flex flex-col overflow-hidden relative bg-background">
+  // Professional NLE Timeline Layout
+  return (
+    <div className="w-full h-full flex flex-col bg-background">
+      {/* Timeline Header */}
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border/30 bg-surface/50">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-neon tracking-wider">TIMELINE</span>
+        </div>
         <ZoomControls containerRef={containerRef} />
-        <TimelineRuler duration={duration} />
+      </div>
+
+      {/* Time Ruler */}
+      <TimelineRuler duration={duration} />
+
+      {/* Track Area - Full Width Edge to Edge */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Track Headers Column (Fixed Left) */}
+        <div className="w-40 flex-shrink-0 border-r border-border/30 bg-surface/30">
+          {/* Video Track Header */}
+          <div className="h-20 border-b border-border/20 px-3 py-2 flex items-center gap-2">
+            <Video className="w-4 h-4 text-neon" />
+            <div className="flex-1">
+              <div className="text-xs font-medium text-foreground">Video</div>
+              <div className="text-[10px] text-muted-foreground">V1</div>
+            </div>
+          </div>
+
+          {/* Audio Track Header (Placeholder) */}
+          <div className="h-16 border-b border-border/20 px-3 py-2 flex items-center gap-2 opacity-40">
+            <Music className="w-4 h-4 text-muted-foreground" />
+            <div className="flex-1">
+              <div className="text-xs font-medium text-muted-foreground">Audio</div>
+              <div className="text-[10px] text-muted-foreground">A1</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Scrollable Track Lanes */}
         <div
-          id="timeline-container"
           ref={containerRef}
-          className="timeline-scroll relative bg-surface flex-1 overflow-x-auto overflow-y-auto"
+          className="flex-1 overflow-x-auto overflow-y-hidden timeline-scroll relative bg-background/50"
           onScroll={handleScroll}
           onClick={handleContainerClick}
         >
-          <div className="relative" style={{ minHeight: `${totalHeight}px` }}>
-            {/* Render all tracks */}
-            {trackLayouts.map((layout) => {
-              const track = tracks.find((t) => t.id === layout.trackId);
-              if (!track) return null;
-              
-              return (
-                <div
-                  key={track.id}
-                  className="absolute left-0 right-0"
-                  style={{ top: `${layout.yOffset}px` }}
-                >
-                  <TimelineTrackRow
-                    track={track}
-                    yOffset={layout.yOffset}
-                  />
-                </div>
-              );
-            })}
-            
-            {/* Playhead spans all tracks */}
-            <Playhead currentTime={currentTime} duration={duration} height={totalHeight} />
+          <div className="relative min-w-full">
+            {/* Video Track Lane */}
+            <div className="h-20 border-b border-border/20 relative">
+              <VideoTrack
+                thumbnails={thumbnails}
+                currentTime={currentTime}
+                duration={duration}
+                startFrame={startFrame}
+                endFrame={endFrame}
+                onSeek={onSeek}
+                onTrimChange={onTrimChange}
+              />
+            </div>
+
+            {/* Audio Track Lane (Placeholder) */}
+            <div className="h-16 border-b border-border/20 relative bg-surface/10">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xs text-muted-foreground/40">Audio track placeholder</span>
+              </div>
+            </div>
+
+            {/* Playhead (spans all tracks) */}
+            <Playhead currentTime={currentTime} duration={duration} height={136} />
           </div>
         </div>
-      </div>
-    );
-  }
-
-  // Legacy single-track mode
-  return (
-    <div className="w-full h-full flex flex-col overflow-hidden relative bg-background">
-      <ZoomControls containerRef={containerRef} />
-      <div
-        id="timeline-container"
-        ref={containerRef}
-        className="timeline-scroll relative flex-1 bg-surface overflow-x-auto"
-        onScroll={handleScroll}
-      >
-        <VideoTrack
-          thumbnails={thumbnails}
-          currentTime={currentTime}
-          duration={duration}
-          startFrame={startFrame}
-          endFrame={endFrame}
-          onSeek={onSeek}
-          onTrimChange={onTrimChange}
-        />
       </div>
     </div>
   );
