@@ -267,8 +267,8 @@ export const TimelineContainer = ({
           <div className="relative min-w-full">
             {/* Video Track Lane */}
             <div 
-              className="border-b border-border/20 relative transition-all duration-300 ease-in-out overflow-hidden"
-              style={{ height: `${getTrackHeight('video', 80)}px` }}
+              className="border-b border-border/20 relative transition-all duration-300 ease-in-out overflow-hidden flex items-center"
+              style={{ height: `${getTrackHeight('video', 80)}px`, minHeight: '80px' }}
             >
               {!collapsedTracks.has('video') && (
                 <VideoTrack
@@ -286,8 +286,8 @@ export const TimelineContainer = ({
 
             {/* Audio Track Lane (Placeholder) */}
             <div 
-              className="border-b border-border/20 relative bg-surface/10 transition-all duration-300 ease-in-out overflow-hidden"
-              style={{ height: `${getTrackHeight('audio', 64)}px` }}
+              className="border-b border-border/20 relative bg-surface/10 transition-all duration-300 ease-in-out overflow-hidden flex items-center"
+              style={{ height: `${getTrackHeight('audio', 64)}px`, minHeight: '64px' }}
             >
               {!collapsedTracks.has('audio') && (
                 <div className="absolute inset-0 flex items-center justify-center">
