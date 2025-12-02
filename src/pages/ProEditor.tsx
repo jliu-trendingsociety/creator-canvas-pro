@@ -231,7 +231,7 @@ export default function ProEditor() {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col bg-background overflow-hidden">
+    <div className="min-h-screen w-full flex flex-col bg-background">
       {/* Top Header */}
       <header className="h-14 md:h-16 border-b border-border flex items-center justify-between px-3 md:px-6 bg-surface shadow-lg">
         <div className="flex items-center gap-2 md:gap-3">
@@ -247,7 +247,7 @@ export default function ProEditor() {
       </header>
 
       {/* Main Layout */}
-      <div className="flex-1 flex overflow-hidden flex-col lg:flex-row">
+      <div className="flex-1 flex flex-row min-h-0">
         {/* LEFT PANEL - Control Panel */}
         <aside 
           className={`border-r border-border/50 bg-surface overflow-y-auto transition-all duration-200 ease-in-out relative ${
@@ -385,15 +385,15 @@ export default function ProEditor() {
         </aside>
 
         {/* CENTER + BOTTOM - Video Canvas and Timeline */}
-        <div className="flex-1 flex flex-col border-r border-border/50 min-w-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* CENTER - Video Canvas */}
           <div 
-            className={`bg-background flex flex-col items-center justify-center p-4 md:p-8 transition-all duration-200 ease-in-out ${
-              viewerFocusMode ? 'flex-1' : 'flex-[0.6]'
+            className={`bg-background flex items-center justify-center transition-all duration-200 ease-in-out ${
+              viewerFocusMode ? 'flex-1 p-5' : 'flex-[0.6] p-4 md:p-8'
             }`}
           >
             {uploadedVideo ? (
-              <div className="w-full max-w-4xl mx-auto space-y-4 animate-in fade-in duration-500 h-full flex flex-col">
+              <div className="w-full h-full flex flex-col gap-4 animate-in fade-in duration-500">
                 {/* Video Canvas Header with Focus Mode Toggle */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -421,40 +421,40 @@ export default function ProEditor() {
                 </div>
 
                 {/* Video Canvas - MasterCanvas Compositor */}
-                <div className={`relative w-full bg-surface rounded-xl overflow-hidden border border-border shadow-2xl transition-all duration-200 ${
-                  viewerFocusMode ? 'flex-1' : 'aspect-video'
-                }`}>
-                  {tracks.length > 0 ? (
-                    <MasterCanvas
-                      engine={renderEngine}
-                      getState={() => ({
-                        currentTime,
-                        tracks: tracks.flatMap((track) =>
-                          track.clips.map((clip) => ({
-                            id: clip.id,
-                            type: track.type === 'video' ? 'video' as const : track.type === 'audio' ? 'audio' as const : 'image' as const,
-                            startTime: clip.start,
-                            endTime: clip.end,
-                            src: clip.src,
-                          }))
-                        ),
-                      })}
-                    />
-                  ) : assetType === "video" ? (
-                    <video
-                      ref={videoRef}
-                      src={uploadedVideo}
-                      className="w-full h-full object-contain"
-                      onTimeUpdate={handleTimeUpdate}
-                      onLoadedMetadata={handleLoadedMetadata}
-                    />
-                  ) : (
-                    <img
-                      src={uploadedVideo}
-                      alt="Uploaded"
-                      className="w-full h-full object-contain"
-                    />
-                  )}
+                <div className="relative w-full flex-1 flex items-center justify-center bg-surface rounded-xl overflow-hidden border border-border shadow-2xl">
+                  <div className={`w-full ${viewerFocusMode ? 'h-full' : 'aspect-video'}`}>
+                    {tracks.length > 0 ? (
+                      <MasterCanvas
+                        engine={renderEngine}
+                        getState={() => ({
+                          currentTime,
+                          tracks: tracks.flatMap((track) =>
+                            track.clips.map((clip) => ({
+                              id: clip.id,
+                              type: track.type === 'video' ? 'video' as const : track.type === 'audio' ? 'audio' as const : 'image' as const,
+                              startTime: clip.start,
+                              endTime: clip.end,
+                              src: clip.src,
+                            }))
+                          ),
+                        })}
+                      />
+                    ) : assetType === "video" ? (
+                      <video
+                        ref={videoRef}
+                        src={uploadedVideo}
+                        className="w-full h-full object-contain"
+                        onTimeUpdate={handleTimeUpdate}
+                        onLoadedMetadata={handleLoadedMetadata}
+                      />
+                    ) : assetType === "image" ? (
+                      <video
+                        ref={videoRef}
+                        src={uploadedVideo}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : null}
+                  </div>
 
                   {/* Safe Frame Overlay */}
                   {showSafeFrames && (
@@ -552,14 +552,14 @@ export default function ProEditor() {
 
           {/* BOTTOM - Timeline */}
           <div 
-            className={`border-t border-border/50 bg-surface/50 backdrop-blur-sm p-3 md:p-6 transition-all duration-200 ease-in-out ${
+            className={`border-t border-border/50 bg-surface/50 backdrop-blur-sm p-3 md:p-6 transition-all duration-200 ease-in-out flex-shrink-0 ${
               viewerFocusMode 
                 ? 'h-32' 
                 : tracks.length > 3 
                   ? 'h-96' 
                   : tracks.length > 1 
                     ? 'h-80' 
-                    : 'h-48 lg:h-80'
+                    : 'h-64'
             }`}
           >
             <div className="flex items-center justify-between mb-6">
