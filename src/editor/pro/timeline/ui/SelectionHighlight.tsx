@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { indexToPx } from "../coordinateSystem";
+import { indexToPx } from "../core/coordinateSystem";
 
 interface ThumbnailHighlightProps {
   hoveredIndex: number | null;

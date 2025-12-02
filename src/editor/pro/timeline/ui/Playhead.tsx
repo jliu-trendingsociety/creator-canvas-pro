@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { timeToPx } from "../coordinateSystem";
-import { useTimelineStore } from "../timelineStore";
+import { timeToPx } from "../core/coordinateSystem";
+import { useTimelineStore } from "../state/timelineStore";
 
 interface PlayheadProps {
   currentTime: number;

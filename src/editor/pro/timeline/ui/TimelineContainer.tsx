@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
-import { useTimelineStore } from "./timelineStore";
-import { VideoTrack } from "./tracks/VideoTrack";
-import { ZoomControls } from "./ui/ZoomControls";
+import { useTimelineStore } from "../state/timelineStore";
+import { VideoTrack } from "./Track";
+import { ZoomControls } from "./ZoomControls";
 
 interface TimelineContainerProps {
   thumbnails: string[];

@@ -4,7 +4,7 @@ import { Upload, Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronLeft
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { useVideoThumbnails } from "@/hooks/useVideoThumbnails";
-import { TimelineContainer } from "@/components/timeline/TimelineContainer";
+import { TimelineContainer } from "@/editor/pro/timeline/ui/TimelineContainer";
 
 export default function ProEditor() {
   const [uploadedVideo, setUploadedVideo] = useState<string | null>(null);
