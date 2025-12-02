@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Upload, Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronLeft, ChevronRight, Sparkles, Video } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
+import { useVideoThumbnails } from "@/hooks/useVideoThumbnails";
+import { TimelineTrack } from "@/components/VideoCreator/TimelineTrack";
 
 export default function ProEditor() {
   const [uploadedVideo, setUploadedVideo] = useState<string | null>(null);
@@ -16,9 +18,18 @@ export default function ProEditor() {
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   const [showSafeFrames, setShowSafeFrames] = useState(false);
+  const [startFrame, setStartFrame] = useState(0);
+  const [endFrame, setEndFrame] = useState(0);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Extract thumbnails from the uploaded video
+  const { thumbnails, isExtracting } = useVideoThumbnails({
+    videoElement: videoRef.current,
+    duration,
+    thumbnailCount: 25,
+  });
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -71,14 +82,17 @@ export default function ProEditor() {
 
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
-      setDuration(videoRef.current.duration);
+      const videoDuration = videoRef.current.duration;
+      setDuration(videoDuration);
+      setEndFrame(videoDuration);
     }
   };
 
-  const handleSeek = (value: number[]) => {
+  const handleSeek = (value: number[] | number) => {
     if (videoRef.current) {
-      videoRef.current.currentTime = value[0];
-      setCurrentTime(value[0]);
+      const time = Array.isArray(value) ? value[0] : value;
+      videoRef.current.currentTime = time;
+      setCurrentTime(time);
     }
   };
 
@@ -228,26 +242,26 @@ export default function ProEditor() {
                     <div>
                       <label className="text-sm text-foreground font-medium block mb-3 flex items-center justify-between">
                         <span>Start Frame</span>
-                        <span className="text-xs text-neon">{formatTime(0)}</span>
+                        <span className="text-xs text-neon">{formatTime(startFrame)}</span>
                       </label>
                       <Slider 
-                        disabled 
-                        defaultValue={[0]} 
-                        max={100} 
-                        step={1}
+                        value={[startFrame]} 
+                        max={duration} 
+                        step={0.1}
+                        onValueChange={(value) => setStartFrame(value[0])}
                         className="[&_[role=slider]]:border-neon [&_[role=slider]]:bg-neon"
                       />
                     </div>
                     <div>
                       <label className="text-sm text-foreground font-medium block mb-3 flex items-center justify-between">
                         <span>End Frame</span>
-                        <span className="text-xs text-neon">{formatTime(duration)}</span>
+                        <span className="text-xs text-neon">{formatTime(endFrame)}</span>
                       </label>
                       <Slider 
-                        disabled 
-                        defaultValue={[100]} 
-                        max={100} 
-                        step={1}
+                        value={[endFrame]} 
+                        max={duration} 
+                        step={0.1}
+                        onValueChange={(value) => setEndFrame(value[0])}
                         className="[&_[role=slider]]:border-neon [&_[role=slider]]:bg-neon"
                       />
                     </div>
@@ -387,9 +401,16 @@ export default function ProEditor() {
           </div>
 
           {/* BOTTOM - Timeline */}
-          <div className="h-96 border-t border-border/50 bg-surface/50 backdrop-blur-sm p-6">
+          <div className="h-80 border-t border-border/50 bg-surface/50 backdrop-blur-sm p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xs font-bold text-neon tracking-wider">TIMELINE</h3>
+              <div className="flex items-center gap-4">
+                <h3 className="text-xs font-bold text-neon tracking-wider">TIMELINE</h3>
+                {isExtracting && (
+                  <span className="text-xs text-muted-foreground animate-pulse">
+                    Extracting frames...
+                  </span>
+                )}
+              </div>
               <div className="flex gap-2">
                 <Button 
                   size="sm" 
@@ -416,22 +437,24 @@ export default function ProEditor() {
             </div>
 
             {/* Timeline Track */}
-            <div className="bg-surface-elevated/80 backdrop-blur rounded-xl p-6 h-64 border border-border/50">
+            <div className="bg-surface-elevated/80 backdrop-blur rounded-xl p-6 h-52 border border-border/50">
               {uploadedVideo && assetType === "video" ? (
                 <div className="h-full space-y-4 animate-in fade-in duration-500">
-                  {/* Track Labels */}
+                  {/* Video Track with Thumbnails */}
                   <div className="flex items-center gap-4">
                     <div className="w-20 text-xs text-muted-foreground font-medium">Video</div>
-                    <div className="flex-1 h-16 bg-gradient-to-r from-card to-card/50 rounded-lg border border-neon/30 shadow-lg relative overflow-hidden group">
-                      <div className="absolute inset-0 flex items-center px-4">
-                        <span className="text-sm text-foreground font-medium">Main Video Track</span>
-                      </div>
-                      {/* Hover Tooltip */}
-                      <div className="absolute inset-0 bg-neon/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      {/* Draggable Handles */}
-                      <div className="absolute left-0 top-0 bottom-0 w-2 bg-neon cursor-ew-resize opacity-50 hover:opacity-100" />
-                      <div className="absolute right-0 top-0 bottom-0 w-2 bg-neon cursor-ew-resize opacity-50 hover:opacity-100" />
-                    </div>
+                    <TimelineTrack
+                      thumbnails={thumbnails}
+                      currentTime={currentTime}
+                      duration={duration}
+                      onSeek={handleSeek}
+                      onTrimChange={(start, end) => {
+                        setStartFrame(start);
+                        setEndFrame(end);
+                      }}
+                      startFrame={startFrame}
+                      endFrame={endFrame}
+                    />
                   </div>
                   
                   <div className="flex items-center gap-4">
