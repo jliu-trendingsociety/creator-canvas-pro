@@ -1,12 +1,16 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronLeft, ChevronRight, Sparkles, Video } from "lucide-react";
+import { Upload, Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronLeft, ChevronRight, Sparkles, Video, Film } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { useVideoThumbnails } from "@/hooks/useVideoThumbnails";
 import { TimelineContainer } from "@/editor/pro/timeline/ui/TimelineContainer";
+import { useToast } from "@/hooks/use-toast";
+import { useTimelineStore } from "@/editor/pro/timeline/state/timelineStore";
+import { RenderEngine } from "@/editor/pro/renderer/RenderEngine";
 
 export default function ProEditor() {
+  const { toast } = useToast();
   const [uploadedVideo, setUploadedVideo] = useState<string | null>(null);
   const [assetType, setAssetType] = useState<"video" | "image" | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -23,6 +27,17 @@ export default function ProEditor() {
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const renderEngineRef = useRef<RenderEngine | null>(null);
+  
+  const { tracks } = useTimelineStore();
+
+  // Initialize render engine
+  useEffect(() => {
+    if (!renderEngineRef.current) {
+      renderEngineRef.current = new RenderEngine();
+      renderEngineRef.current.initCompositor(1920, 1080);
+    }
+  }, []);
 
   // Extract thumbnails from the uploaded video
   const { thumbnails, isExtracting } = useVideoThumbnails({
@@ -115,6 +130,28 @@ export default function ProEditor() {
   const handleTrimChange = (start: number, end: number) => {
     setStartFrame(start);
     setEndFrame(end);
+  };
+
+  const handleGenerateRenderPreview = () => {
+    if (!renderEngineRef.current) {
+      toast({
+        title: "Render engine not initialized",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Evaluate timeline and build render graph
+    const graph = renderEngineRef.current.evaluateTimeline(tracks, duration);
+
+    // Log to console
+    console.log('[ProEditor] Render Graph Generated:', graph);
+
+    // Show success toast
+    toast({
+      title: "Render graph generated",
+      description: `${graph.nodes.length} clips scheduled across ${graph.trackCount} tracks. Check console for details.`,
+    });
   };
 
   // Start/End frame slider handlers
@@ -566,6 +603,14 @@ export default function ProEditor() {
                 <Button className="w-full bg-neon text-background hover:bg-neon-glow font-bold py-6 text-lg transition-all hover:shadow-[0_0_30px_rgba(186,230,55,0.4)] hover:scale-[1.02]">
                   <Sparkles className="w-5 h-5 mr-2" />
                   Generate Pro Video
+                </Button>
+
+                <Button
+                  onClick={handleGenerateRenderPreview}
+                  className="w-full bg-surface/80 hover:bg-surface text-foreground font-medium py-3 transition-all border border-border/30 flex items-center justify-center gap-2"
+                >
+                  <Film className="w-4 h-4" />
+                  Generate Render Preview
                 </Button>
               </div>
             </div>
