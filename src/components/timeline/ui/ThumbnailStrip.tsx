@@ -26,7 +26,7 @@ export const ThumbnailStrip = ({
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   
   const thumbnailWidth = 80;
-  const thumbnailHeight = 45;
+  const thumbnailHeight = 40;
   const thumbnailGap = 4;
 
   // Calculate and store total thumbnail width
@@ -87,17 +87,24 @@ export const ThumbnailStrip = ({
               src={thumb}
               alt={`Frame ${index}`}
               className={cn(
-                "w-full h-full object-cover border transition-all",
-                isActive && "border-neon border-2 shadow-[0_0_10px_rgba(186,230,55,0.4)]",
-                !isActive && "border-border/50",
-                !isInTrimRange && "opacity-40",
-                "hover:border-neon/50 hover:scale-105"
+                "w-full h-full object-cover rounded transition-opacity duration-150",
+                !isInTrimRange && "opacity-40"
               )}
             />
             
+            {/* Unified Highlight Border */}
+            {(hoveredIndex === index || isActive) && (
+              <div 
+                className={cn(
+                  "absolute inset-0 border-2 border-neon rounded pointer-events-none z-30",
+                  "transition-opacity duration-150"
+                )}
+              />
+            )}
+            
             {/* Hover Preview */}
             {hoveredIndex === index && (
-              <div className="absolute -top-24 left-1/2 -translate-x-1/2 z-20 animate-in fade-in duration-200">
+              <div className="absolute -top-20 left-1/2 -translate-x-1/2 z-50 animate-in fade-in duration-200">
                 <div className="bg-surface-elevated border border-neon/50 rounded-lg p-2 shadow-2xl">
                   <img
                     src={thumb}
