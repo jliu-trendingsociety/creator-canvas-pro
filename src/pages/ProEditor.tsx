@@ -385,31 +385,38 @@ export default function ProEditor() {
                 <div className="w-full max-w-5xl space-y-4 animate-in fade-in duration-500">
                   {/* Video Canvas - MasterCanvas Compositor */}
                   <div className="relative w-full aspect-video bg-surface rounded-xl overflow-hidden border border-border shadow-2xl">
-                    {tracks.length > 0 ? (
-                      <MasterCanvas
-                        engine={renderEngine}
-                        getState={() => ({
-                          currentTime,
-                          tracks: tracks.flatMap((track) =>
-                            track.clips.map((clip) => ({
-                              id: clip.id,
-                              type: track.type === 'video' ? 'video' as const : track.type === 'audio' ? 'audio' as const : 'image' as const,
-                              startTime: clip.start,
-                              endTime: clip.end,
-                              src: clip.src,
-                            }))
-                          ),
-                        })}
-                      />
-                    ) : assetType === "video" ? (
-                      <video
-                        ref={videoRef}
-                        src={uploadedVideo}
-                        className="w-full h-full object-contain"
-                        onTimeUpdate={handleTimeUpdate}
-                        onLoadedMetadata={handleLoadedMetadata}
-                      />
-                    ) : (
+                    {/* Always render video element for playback control */}
+                    <video
+                      ref={videoRef}
+                      src={uploadedVideo}
+                      className={`w-full h-full object-contain ${tracks.length > 0 ? 'hidden' : ''}`}
+                      onTimeUpdate={handleTimeUpdate}
+                      onLoadedMetadata={handleLoadedMetadata}
+                    />
+                    
+                    {/* MasterCanvas compositor overlay when tracks exist */}
+                    {tracks.length > 0 && assetType === "video" && (
+                      <div className="absolute inset-0">
+                        <MasterCanvas
+                          engine={renderEngine}
+                          getState={() => ({
+                            currentTime,
+                            tracks: tracks.flatMap((track) =>
+                              track.clips.map((clip) => ({
+                                id: clip.id,
+                                type: track.type === 'video' ? 'video' as const : track.type === 'audio' ? 'audio' as const : 'image' as const,
+                                startTime: clip.start,
+                                endTime: clip.end,
+                                src: clip.src,
+                              }))
+                            ),
+                          })}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Image display */}
+                    {assetType === "image" && (
                       <img
                         src={uploadedVideo}
                         alt="Uploaded"
