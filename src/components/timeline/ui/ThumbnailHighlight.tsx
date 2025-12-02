@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface ThumbnailHighlightProps {
@@ -6,7 +6,6 @@ interface ThumbnailHighlightProps {
   activeIndex: number | null;
   thumbnailWidth: number;
   thumbnailHeight: number;
-  thumbnailGap: number;
   containerRef: React.RefObject<HTMLDivElement>;
 }
 
@@ -15,7 +14,6 @@ export const ThumbnailHighlight = ({
   activeIndex,
   thumbnailWidth,
   thumbnailHeight,
-  thumbnailGap,
   containerRef,
 }: ThumbnailHighlightProps) => {
   const [highlightStyle, setHighlightStyle] = useState<React.CSSProperties>({});
@@ -29,18 +27,12 @@ export const ThumbnailHighlight = ({
       return;
     }
 
-    const thumbnailElement = containerRef.current.children[targetIndex] as HTMLElement;
-    if (!thumbnailElement) {
-      setIsVisible(false);
-      return;
-    }
-
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const thumbnailRect = thumbnailElement.getBoundingClientRect();
+    // Calculate position using the same coordinate system as thumbnails
+    const leftPos = Math.round(targetIndex * thumbnailWidth);
 
     setHighlightStyle({
-      left: thumbnailRect.left - containerRect.left,
-      width: thumbnailWidth,
+      left: leftPos,
+      width: Math.round(thumbnailWidth),
       height: thumbnailHeight,
     });
     setIsVisible(true);

@@ -34,10 +34,10 @@ export const ThumbnailStrip = ({
   // Calculate and store total thumbnail width
   useEffect(() => {
     if (thumbnails.length > 0) {
-      const width = thumbnails.length * thumbnailWidth + (thumbnails.length - 1) * thumbnailGap;
-      setTotalThumbnailWidth(width);
+      const totalWidth = Math.round(thumbnails.length * thumbnailWidth);
+      setTotalThumbnailWidth(totalWidth);
     }
-  }, [thumbnails.length, thumbnailWidth, thumbnailGap, setTotalThumbnailWidth]);
+  }, [thumbnails.length, thumbnailWidth, setTotalThumbnailWidth]);
 
   const handleThumbnailClick = (index: number) => {
     const time = (index / thumbnails.length) * duration;
@@ -57,7 +57,7 @@ export const ThumbnailStrip = ({
     );
   }
 
-  const totalWidth = thumbnails.length * thumbnailWidth + (thumbnails.length - 1) * thumbnailGap;
+  const totalWidth = Math.round(thumbnails.length * thumbnailWidth);
   
   // Calculate active index based on currentTime
   const activeIndex = Math.floor((currentTime / duration) * thumbnails.length);
@@ -66,22 +66,27 @@ export const ThumbnailStrip = ({
     <div className="relative">
       <div 
         ref={containerRef}
-        className="absolute top-0 left-0 flex flex-row whitespace-nowrap shrink-0 min-w-max"
+        className="absolute top-0 left-0 flex flex-row whitespace-nowrap shrink-0 min-w-max gap-0"
         style={{ 
-          width: `${totalWidth}px`,
-          gap: `${thumbnailGap}px`
+          width: `${totalWidth}px`
         }}
       >
       {thumbnails.map((thumb, index) => {
         const timeAtThumb = (index / thumbnails.length) * duration;
         const isInTrimRange = timeAtThumb >= startFrame && timeAtThumb <= endFrame;
         const isActive = Math.abs(timeAtThumb - currentTime) < (duration / thumbnails.length);
+        const leftPos = Math.round(index * thumbnailWidth);
 
         return (
           <div
             key={index}
-            className="relative flex-shrink-0 group"
-            style={{ width: thumbnailWidth, height: thumbnailHeight }}
+            className="absolute flex-shrink-0 group"
+            style={{ 
+              width: Math.round(thumbnailWidth),
+              height: thumbnailHeight,
+              left: `${leftPos}px`,
+              top: 0
+            }}
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
             onClick={(e) => {
@@ -123,7 +128,6 @@ export const ThumbnailStrip = ({
         activeIndex={activeIndex}
         thumbnailWidth={thumbnailWidth}
         thumbnailHeight={thumbnailHeight}
-        thumbnailGap={thumbnailGap}
         containerRef={containerRef}
       />
     </div>
