@@ -94,13 +94,14 @@ export const TimelineContainer = ({
 
   // Professional NLE Timeline Layout
   return (
-    <div className="w-full h-full flex flex-col bg-background">
+    <div className="w-full h-full flex flex-col bg-background relative">
       {/* Timeline Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-border/30 bg-surface/50">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-neon tracking-wider">TIMELINE</span>
         </div>
-        <ZoomControls containerRef={containerRef} />
+        {/* Spacer for zoom controls positioning */}
+        <div className="w-48" />
       </div>
 
       {/* Time Ruler - Fixed at top, scrolls with content */}
@@ -309,6 +310,15 @@ export const TimelineContainer = ({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Zoom Controls - Bottom Right (Adobe Premiere style) */}
+      <div className="absolute bottom-3 right-3 z-20">
+        <ZoomControls 
+          containerRef={containerRef}
+          currentTime={currentTime}
+          duration={duration}
+        />
       </div>
     </div>
   );

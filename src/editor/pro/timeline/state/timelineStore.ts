@@ -180,7 +180,7 @@ export const useTimelineStore = create<TimelineState>((set) => ({
   setDuration: (duration) => set({ duration, trimEnd: duration }),
   setCurrentTime: (currentTime) => set({ currentTime }),
   setIsPlaying: (isPlaying) => set({ isPlaying }),
-  setZoom: (zoom) => set({ zoom: Math.max(0.2, Math.min(4.0, zoom)) }),
+  setZoom: (zoom) => set({ zoom: Math.max(0.25, Math.min(8.0, zoom)) }),
   setScrollLeft: (scrollLeft) => set({ scrollLeft }),
   setTotalThumbnailWidth: (totalThumbnailWidth) => set({ totalThumbnailWidth }),
   setSelectedFrameIndex: (selectedFrameIndex) => set({ selectedFrameIndex }),
