@@ -7,7 +7,7 @@ interface TimelineRulerProps {
 }
 
 export const TimelineRuler = ({ duration }: TimelineRulerProps) => {
-  const { zoom, totalThumbnailWidth } = useTimelineStore();
+  const { zoom, totalThumbnailWidth, scrollLeft } = useTimelineStore();
 
   if (duration === 0 || totalThumbnailWidth === 0) return null;
 
@@ -39,7 +39,11 @@ export const TimelineRuler = ({ duration }: TimelineRulerProps) => {
       
       {/* Ruler ticks area - scrolls with content */}
       <div className="flex-1 relative overflow-hidden bg-surface/10">
-        {ticks.map(({ time, isMajor }) => {
+        <div 
+          className="relative h-full"
+          style={{ transform: `translateX(-${scrollLeft}px)` }}
+        >
+          {ticks.map(({ time, isMajor }) => {
           const left = timeToPx(time, { duration, totalWidth: totalThumbnailWidth, zoom });
           
           return (
@@ -64,6 +68,7 @@ export const TimelineRuler = ({ duration }: TimelineRulerProps) => {
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );
