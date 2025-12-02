@@ -31,10 +31,10 @@ export interface TimelineState {
   currentTime: number;
   isPlaying: boolean;
 
-  // Visual state
-  zoom: number;
-  scrollLeft: number;
-  totalThumbnailWidth: number;
+  // UNIFIED COORDINATE SYSTEM - Single source of truth
+  zoom: number;              // Zoom multiplier (0.2x - 4.0x)
+  scrollLeft: number;        // Horizontal scroll offset in pixels
+  totalThumbnailWidth: number; // Base width before zoom (calculated from thumbnails)
 
   // Multi-track state
   tracks: Track[];

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useTimelineStore } from "../state/timelineStore";
-import { indexToPx, pxToIndex } from "../core/coordinateSystem";
+import { indexToPx, pxToIndex, timeToPx } from "../core/coordinateSystem";
 import { formatTime } from "../utils/time";
 import { ThumbnailHighlight } from "./SelectionHighlight";
 
@@ -26,25 +26,31 @@ export const ThumbnailStrip = ({
   const { setTotalThumbnailWidth, zoom } = useTimelineStore();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   
+  // UNIFIED: Base thumbnail dimensions (before zoom)
   const baseThumbnailWidth = 80;
   const thumbnailHeight = 40;
-  const thumbnailGap = 4;
-  const thumbnailWidth = baseThumbnailWidth * zoom;
+  
+  // UNIFIED: Apply zoom to get actual thumbnail width
+  const thumbnailWidth = Math.round(baseThumbnailWidth * zoom);
 
-  // Calculate and store total thumbnail width
+  // UNIFIED: Calculate and store total width (single source of truth)
   useEffect(() => {
     if (thumbnails.length > 0) {
-      const totalWidth = Math.round(thumbnails.length * thumbnailWidth);
-      setTotalThumbnailWidth(totalWidth);
+      // Store BASE width (before zoom) - zoom is applied in coordinate calculations
+      const baseWidth = thumbnails.length * baseThumbnailWidth;
+      setTotalThumbnailWidth(baseWidth);
     }
-  }, [thumbnails.length, thumbnailWidth, setTotalThumbnailWidth]);
+  }, [thumbnails.length, setTotalThumbnailWidth]);
 
+  // UNIFIED: Click detection uses pxToIndex
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const scrollContainer = containerRef.current.parentElement;
     const scrollLeft = scrollContainer?.scrollLeft || 0;
     const px = e.clientX - rect.left + scrollLeft;
+    
+    // Use unified coordinate system
     const index = pxToIndex(px, thumbnailWidth);
     
     if (index >= 0 && index < thumbnails.length) {
@@ -66,9 +72,10 @@ export const ThumbnailStrip = ({
     );
   }
 
+  // UNIFIED: Total width with zoom applied
   const totalWidth = Math.round(thumbnails.length * thumbnailWidth);
   
-  // Calculate active index based on currentTime
+  // UNIFIED: Calculate active index based on currentTime
   const activeIndex = Math.floor((currentTime / duration) * thumbnails.length);
 
   return (
@@ -82,8 +89,11 @@ export const ThumbnailStrip = ({
         onClick={handleContainerClick}
       >
       {thumbnails.map((thumb, index) => {
+        // UNIFIED: Use same time calculation as ruler
         const timeAtThumb = (index / thumbnails.length) * duration;
         const isInTrimRange = timeAtThumb >= startFrame && timeAtThumb <= endFrame;
+        
+        // UNIFIED: Use indexToPx for consistent positioning
         const leftPos = indexToPx(index, thumbnailWidth);
 
         return (
@@ -91,7 +101,7 @@ export const ThumbnailStrip = ({
             key={index}
             className="absolute flex-shrink-0 group"
             style={{ 
-              width: Math.round(thumbnailWidth),
+              width: thumbnailWidth,
               height: thumbnailHeight,
               left: `${leftPos}px`,
               top: 0
