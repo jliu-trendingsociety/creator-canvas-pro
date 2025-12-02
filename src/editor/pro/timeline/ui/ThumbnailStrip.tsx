@@ -72,7 +72,7 @@ export const ThumbnailStrip = ({
   const activeIndex = Math.floor((currentTime / duration) * thumbnails.length);
 
   return (
-    <div className="relative">
+    <div className="relative w-full h-full overflow-hidden flex flex-row items-center whitespace-nowrap timeline-scroll">
       <div 
         ref={containerRef}
         className="absolute top-0 left-0 flex flex-row whitespace-nowrap shrink-0 min-w-max gap-0 cursor-pointer"
