@@ -1,4 +1,5 @@
 # Creator Canvas Pro – Copilot Master Instructions
+
 This file lives at .github/copilot-instructions.md and is the single source of truth for AI behavior in this repo.
 
 ## Purpose
@@ -71,7 +72,26 @@ It orchestrates state, renderer, timeline, and layout only.
 
 # 3. Core Architectural Domains
 
-## 3.1 Timeline State Management
+## 3.1 Editor State Management
+
+Located at: `src/editor/pro/state/editorStore.ts`
+
+This store manages **UI-level editor state** (Phase 2 extraction):
+
+- Uploaded asset URL and type (`uploadedAssetUrl`, `assetType`)
+- Panel collapse/expand state (`leftPanelCollapsed`, `rightPanelCollapsed`)
+- Viewer focus mode (`viewerFocusMode`)
+- Safe frames visibility toggle (`showSafeFrames`)
+- Upload drag interaction (`isUploadDragging`)
+
+Use `useEditorStore()` for these UI flags. This is **separate from timeline state**.
+
+All editor state mutations MUST go through store actions.  
+**Never mutate state directly.**
+
+---
+
+## 3.2 Timeline State Management
 
 Located at: `src/editor/pro/timeline/state/timelineStore.ts`
 
@@ -93,7 +113,7 @@ All timeline mutations MUST go through store actions.
 
 ---
 
-## 3.2 Timeline Coordinate System
+## 3.3 Timeline Coordinate System
 
 Located at: `src/editor/pro/timeline/core/coordinateSystem.ts`
 
@@ -108,7 +128,7 @@ No custom pixel math is allowed anywhere else.
 
 ---
 
-## 3.3 Rendering Pipeline
+## 3.4 Rendering Pipeline
 
 ### Legacy Render Engine (preview-only)
 
@@ -151,6 +171,38 @@ Responsibilities:
 
 The future:  
 **AI agents will call command APIs to build render graphs automatically.**
+
+---
+
+## 3.5 Layout Layer (Phase 3)
+
+Located at: `src/editor/pro/layout/`
+
+Presentation-only components for ProEditor workspace zones:
+
+- **LeftPanel** - Upload zone, asset metadata, frame controls
+- **RightPanel** - AI prompts, generation controls
+- **ViewerContainer** - Video/canvas viewer, playback controls
+- **TimelineContainer** - Timeline tracks, thumbnails, tabs
+
+### Layout Component Rules
+
+**Forbidden in layout components:**
+
+- State mutations (no useState, only props)
+- Zustand store access (props only)
+- Business logic (calculations, conditionals beyond render)
+- Direct DOM manipulation
+- Pixel math or coordinate calculations
+
+**Allowed:**
+
+- Read state from props (read-only)
+- Call callbacks from props
+- Render UI based on prop values
+- Pass children and refs through to parent
+
+All logic stays in `ProEditor.tsx` or delegated to specific modules.
 
 ---
 
