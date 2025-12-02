@@ -74,6 +74,7 @@ export default function ProEditor() {
     }
   };
 
+  // Unified time update handler - SINGLE SOURCE OF TRUTH
   const handleTimeUpdate = () => {
     if (videoRef.current) {
       setCurrentTime(videoRef.current.currentTime);
@@ -85,15 +86,50 @@ export default function ProEditor() {
       const videoDuration = videoRef.current.duration;
       setDuration(videoDuration);
       setEndFrame(videoDuration);
+      setCurrentTime(0);
     }
   };
 
-  const handleSeek = (value: number[] | number) => {
+  // Unified seek handler - updates both state and video element
+  const seekToTime = (time: number) => {
+    const clampedTime = Math.max(0, Math.min(time, duration));
+    
     if (videoRef.current) {
-      const time = Array.isArray(value) ? value[0] : value;
-      videoRef.current.currentTime = time;
-      setCurrentTime(time);
+      videoRef.current.currentTime = clampedTime;
     }
+    setCurrentTime(clampedTime);
+  };
+
+  // Playback scrub bar handler
+  const handleSeek = (value: number[] | number) => {
+    const time = Array.isArray(value) ? value[0] : value;
+    seekToTime(time);
+  };
+
+  // Timeline thumbnail seek handler
+  const handleTimelineSeek = (time: number) => {
+    seekToTime(time);
+  };
+
+  // Trim change handler - updates trim points and optionally seeks
+  const handleTrimChange = (start: number, end: number) => {
+    setStartFrame(start);
+    setEndFrame(end);
+  };
+
+  // Start/End frame slider handlers
+  const handleStartFrameChange = (value: number[]) => {
+    const newStart = value[0];
+    setStartFrame(newStart);
+    // Optionally seek to the new start frame for visual feedback
+    seekToTime(newStart);
+  };
+
+  const handleEndFrameChange = (value: number[]) => {
+    const newEnd = value[0];
+    setEndFrame(newEnd);
+    // Optionally seek to the new end frame for visual feedback
+    seekToTime(newEnd);
   };
 
   const handleVolumeChange = (value: number[]) => {
@@ -248,7 +284,7 @@ export default function ProEditor() {
                         value={[startFrame]} 
                         max={duration} 
                         step={0.1}
-                        onValueChange={(value) => setStartFrame(value[0])}
+                        onValueChange={handleStartFrameChange}
                         className="[&_[role=slider]]:border-neon [&_[role=slider]]:bg-neon"
                       />
                     </div>
@@ -261,7 +297,7 @@ export default function ProEditor() {
                         value={[endFrame]} 
                         max={duration} 
                         step={0.1}
-                        onValueChange={(value) => setEndFrame(value[0])}
+                        onValueChange={handleEndFrameChange}
                         className="[&_[role=slider]]:border-neon [&_[role=slider]]:bg-neon"
                       />
                     </div>
@@ -447,11 +483,8 @@ export default function ProEditor() {
                       thumbnails={thumbnails}
                       currentTime={currentTime}
                       duration={duration}
-                      onSeek={handleSeek}
-                      onTrimChange={(start, end) => {
-                        setStartFrame(start);
-                        setEndFrame(end);
-                      }}
+                      onSeek={handleTimelineSeek}
+                      onTrimChange={handleTrimChange}
                       startFrame={startFrame}
                       endFrame={endFrame}
                     />
