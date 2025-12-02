@@ -67,17 +67,15 @@ export const TimelineContainer = ({
   // Multi-track mode
   if (tracks.length > 0) {
     const totalHeight = trackLayouts.reduce((sum, layout) => sum + layout.height, 0);
-    const rulerHeight = 24; // Height of the ruler
     
     return (
-      <div className="flex-1 relative min-w-0 flex flex-col">
+      <div className="w-full h-full flex flex-col overflow-hidden relative bg-background">
         <ZoomControls containerRef={containerRef} />
         <TimelineRuler duration={duration} />
         <div
           id="timeline-container"
           ref={containerRef}
-          className="timeline-scroll relative bg-surface rounded-b-lg border border-t-0 border-border/30 overflow-x-auto overflow-y-auto flex-1"
-          style={{ maxHeight: `${Math.max(totalHeight + 40, 200)}px` }}
+          className="timeline-scroll relative bg-surface flex-1 overflow-x-auto overflow-y-auto"
           onScroll={handleScroll}
           onClick={handleContainerClick}
         >
@@ -111,12 +109,12 @@ export const TimelineContainer = ({
 
   // Legacy single-track mode
   return (
-    <div className="flex-1 relative min-w-0">
+    <div className="w-full h-full flex flex-col overflow-hidden relative bg-background">
       <ZoomControls containerRef={containerRef} />
       <div
         id="timeline-container"
         ref={containerRef}
-        className="timeline-scroll relative h-14 bg-surface rounded-lg border border-border/30"
+        className="timeline-scroll relative flex-1 bg-surface overflow-x-auto"
         onScroll={handleScroll}
       >
         <VideoTrack

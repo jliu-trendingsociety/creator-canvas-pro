@@ -26,7 +26,7 @@ export const TimelineRuler = ({ duration }: TimelineRulerProps) => {
   }
 
   return (
-    <div className="sticky top-0 left-0 w-full h-6 bg-background/95 border-b border-border/30 z-10 flex items-center">
+    <div className="relative w-full h-8 border-b border-border/30 bg-muted/10 flex items-center overflow-hidden">
       <div className="w-32 flex-shrink-0 border-r border-border/30 px-3 text-[10px] text-muted-foreground">
         TIME
       </div>

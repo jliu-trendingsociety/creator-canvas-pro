@@ -22,7 +22,7 @@ export const Playhead = ({ currentTime, duration, height = 40 }: PlayheadProps) 
 
   return (
     <div
-      className="absolute top-0 w-0.5 bg-neon shadow-[0_0_10px_hsl(var(--neon)/0.6)] pointer-events-none z-50"
+      className="absolute top-0 bottom-0 w-px bg-neon z-50 pointer-events-none shadow-[0_0_10px_hsl(var(--neon)/0.6)]"
       style={{ 
         left: `${position}px`,
         height: `${height}px`

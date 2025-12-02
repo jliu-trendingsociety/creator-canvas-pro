@@ -509,79 +509,30 @@ export default function ProEditor() {
             )}
           </div>
 
-          {/* BOTTOM - Timeline */}
-          <div className="h-48 lg:h-80 border-t border-border/50 bg-surface/50 backdrop-blur-sm p-3 md:p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <h3 className="text-xs font-bold text-neon tracking-wider">TIMELINE</h3>
-                {isExtracting && (
-                  <span className="text-xs text-muted-foreground animate-pulse">
-                    Extracting frames...
-                  </span>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="text-foreground bg-neon/10 border border-neon/30 hover:bg-neon/20"
-                >
-                  Video
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition-all"
-                >
-                  Effects
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition-all"
-                >
-                  Text
-                </Button>
-              </div>
-            </div>
-
-            {/* Timeline Track */}
-            <div className="bg-surface-elevated/80 backdrop-blur rounded-xl p-4 md:p-6 border border-border/50 space-y-4">
-              {uploadedVideo && assetType === "video" ? (
-                <div className="space-y-4 animate-in fade-in duration-500">
-                  {/* Video Track with Thumbnails */}
-                  <div className="flex items-start gap-2 md:gap-4">
-                    <div className="w-16 md:w-20 text-xs text-muted-foreground font-medium pt-2 flex-shrink-0">Video</div>
-                    <TimelineContainer
-                      thumbnails={thumbnails}
-                      currentTime={currentTime}
-                      duration={duration}
-                      onSeek={handleTimelineSeek}
-                      onTrimChange={handleTrimChange}
-                      startFrame={startFrame}
-                      endFrame={endFrame}
-                    />
-                  </div>
-                  
-                  <div className="flex items-start gap-2 md:gap-4">
-                    <div className="w-16 md:w-20 text-xs text-muted-foreground font-medium pt-2 flex-shrink-0">Effects</div>
-                    <div className="flex-1 h-12 bg-surface rounded-lg border border-border/30 border-dashed min-w-0" />
-                  </div>
-                  
-                  <div className="flex items-start gap-2 md:gap-4">
-                    <div className="w-16 md:w-20 text-xs text-muted-foreground font-medium pt-2 flex-shrink-0">Text</div>
-                    <div className="flex-1 h-12 bg-surface rounded-lg border border-border/30 border-dashed min-w-0" />
-                  </div>
-                </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center">
-                  <Video className="w-12 h-12 text-muted-foreground/40 mb-3" />
-                  <p className="text-muted-foreground/60 text-sm">
-                    Timeline will appear after video upload
-                  </p>
-                </div>
-              )}
-            </div>
+          {/* TIMELINE SECTION */}
+          <div
+            className="
+              w-full 
+              border-t border-border/40 
+              bg-background/40 
+              backdrop-blur-sm 
+              flex 
+              flex-col 
+              overflow-hidden
+            "
+            style={{
+              height: '260px'
+            }}
+          >
+            <TimelineContainer
+              thumbnails={thumbnails}
+              currentTime={currentTime}
+              duration={duration}
+              startFrame={startFrame}
+              endFrame={endFrame}
+              onSeek={handleTimelineSeek}
+              onTrimChange={handleTrimChange}
+            />
           </div>
         </div>
 
