@@ -1,4 +1,4 @@
-import { useTimelineStore } from "../timelineStore";
+import { useTimelineStore } from "../state/timelineStore";
 import { Button } from "@/components/ui/button";
 import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 

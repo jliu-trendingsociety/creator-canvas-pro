@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { useTimelineStore } from "../timelineStore";
-import { indexToPx, pxToIndex } from "../coordinateSystem";
-import { formatTime } from "../timeEngine";
-import { ThumbnailHighlight } from "./ThumbnailHighlight";
+import { useTimelineStore } from "../state/timelineStore";
+import { indexToPx, pxToIndex } from "../core/coordinateSystem";
+import { formatTime } from "../utils/time";
+import { ThumbnailHighlight } from "./SelectionHighlight";
 
 interface ThumbnailStripProps {
   thumbnails: string[];

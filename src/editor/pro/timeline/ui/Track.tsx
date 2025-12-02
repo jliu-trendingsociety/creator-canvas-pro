@@ -1,7 +1,7 @@
-import { ThumbnailStrip } from "../ui/ThumbnailStrip";
-import { Playhead } from "../ui/Playhead";
-import { TrimHandles } from "../ui/TrimHandles";
-import { useTimelineStore } from "../timelineStore";
+import { ThumbnailStrip } from "./ThumbnailStrip";
+import { Playhead } from "./Playhead";
+import { TrimHandles } from "./TrimHandles";
+import { useTimelineStore } from "../state/timelineStore";
 
 interface VideoTrackProps {
   thumbnails: string[];

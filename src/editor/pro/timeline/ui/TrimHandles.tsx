@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { indexToPx, pxToIndex, clampTime } from "../coordinateSystem";
-import { useTimelineStore } from "../timelineStore";
+import { indexToPx, pxToIndex, clampTime } from "../core/coordinateSystem";
+import { useTimelineStore } from "../state/timelineStore";
 
 interface TrimHandlesProps {
   startFrame: number;
