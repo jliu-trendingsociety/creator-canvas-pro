@@ -23,12 +23,13 @@ export const ThumbnailStrip = ({
   onSeek,
 }: ThumbnailStripProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { setTotalThumbnailWidth } = useTimelineStore();
+  const { setTotalThumbnailWidth, zoom } = useTimelineStore();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   
-  const thumbnailWidth = 80;
+  const baseThumbnailWidth = 80;
   const thumbnailHeight = 40;
   const thumbnailGap = 4;
+  const thumbnailWidth = baseThumbnailWidth * zoom;
 
   // Calculate and store total thumbnail width
   useEffect(() => {
