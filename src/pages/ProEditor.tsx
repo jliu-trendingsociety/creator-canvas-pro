@@ -251,7 +251,7 @@ export default function ProEditor() {
         {/* LEFT PANEL - Control Panel */}
         <aside 
           className={`border-r border-border/50 bg-surface overflow-y-auto transition-all duration-200 ease-in-out relative ${
-            leftPanelCollapsed ? 'w-8' : 'w-full lg:w-80'
+            leftPanelCollapsed ? 'w-8' : 'w-[280px]'
           }`}
         >
           {/* Collapse Toggle */}
@@ -385,7 +385,7 @@ export default function ProEditor() {
         </aside>
 
         {/* CENTER + BOTTOM - Video Canvas and Timeline */}
-        <div className="flex-1 flex flex-col border-r border-border/50 min-w-0">
+        <div className="flex-1 flex flex-col border-r border-border/50 min-w-0 overflow-hidden">
           {/* CENTER - Video Canvas */}
           <div 
             className={`bg-background flex flex-col items-center justify-center p-4 md:p-8 transition-all duration-200 ease-in-out ${
@@ -393,7 +393,7 @@ export default function ProEditor() {
             }`}
           >
             {uploadedVideo ? (
-              <div className="w-full max-w-5xl space-y-4 animate-in fade-in duration-500 h-full flex flex-col">
+              <div className="w-full max-w-4xl mx-auto space-y-4 animate-in fade-in duration-500 h-full flex flex-col">
                 {/* Video Canvas Header with Focus Mode Toggle */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -638,8 +638,8 @@ export default function ProEditor() {
 
         {/* RIGHT PANEL - Prompt & Variations */}
         <aside 
-          className={`border-l border-border/50 bg-surface overflow-y-auto transition-all duration-200 ease-in-out relative ${
-            rightPanelCollapsed ? 'w-8' : 'w-full lg:w-96'
+          className={`bg-surface overflow-y-auto transition-all duration-200 ease-in-out relative ${
+            rightPanelCollapsed ? 'w-8' : 'w-[320px]'
           }`}
         >
           {/* Collapse Toggle */}
