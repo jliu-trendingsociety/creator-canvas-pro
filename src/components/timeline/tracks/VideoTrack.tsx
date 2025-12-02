@@ -1,6 +1,7 @@
 import { ThumbnailStrip } from "../ui/ThumbnailStrip";
 import { Playhead } from "../ui/Playhead";
 import { TrimHandles } from "../ui/TrimHandles";
+import { useTimelineStore } from "../timelineStore";
 
 interface VideoTrackProps {
   thumbnails: string[];
@@ -21,6 +22,9 @@ export const VideoTrack = ({
   onSeek,
   onTrimChange,
 }: VideoTrackProps) => {
+  const { zoom } = useTimelineStore();
+  const baseThumbnailWidth = 80;
+  const thumbnailWidth = baseThumbnailWidth * zoom;
   return (
     <div className="relative h-14">
       <ThumbnailStrip
@@ -36,6 +40,8 @@ export const VideoTrack = ({
         startFrame={startFrame}
         endFrame={endFrame}
         duration={duration}
+        thumbnailCount={thumbnails.length}
+        thumbnailWidth={thumbnailWidth}
         onTrimChange={onTrimChange}
         onSeek={onSeek}
       />

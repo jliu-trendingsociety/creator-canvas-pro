@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { timeToPx, pxToTime, clampTime } from "../coordinateSystem";
+import { indexToPx, pxToIndex, clampTime } from "../coordinateSystem";
 import { useTimelineStore } from "../timelineStore";
 
 interface TrimHandlesProps {
   startFrame: number;
   endFrame: number;
   duration: number;
+  thumbnailCount: number;
+  thumbnailWidth: number;
   onTrimChange: (start: number, end: number) => void;
   onSeek: (time: number) => void;
 }
@@ -14,21 +16,23 @@ export const TrimHandles = ({
   startFrame,
   endFrame,
   duration,
+  thumbnailCount,
+  thumbnailWidth,
   onTrimChange,
   onSeek,
 }: TrimHandlesProps) => {
-  const { totalThumbnailWidth, zoom } = useTimelineStore();
   const [isDragging, setIsDragging] = useState<'start' | 'end' | null>(null);
   const [startPos, setStartPos] = useState(0);
   const [endPos, setEndPos] = useState(0);
 
-  // Update positions when props or timeline state change
+  // Convert time to index, then index to pixel for perfect frame alignment
   useEffect(() => {
-    const startPx = Math.round(timeToPx(startFrame, { duration, totalWidth: totalThumbnailWidth, zoom }));
-    const endPx = Math.round(timeToPx(endFrame, { duration, totalWidth: totalThumbnailWidth, zoom }));
-    setStartPos(startPx);
-    setEndPos(endPx);
-  }, [startFrame, endFrame, duration, totalThumbnailWidth, zoom]);
+    if (thumbnailCount === 0) return;
+    const startIndex = Math.floor((startFrame / duration) * thumbnailCount);
+    const endIndex = Math.floor((endFrame / duration) * thumbnailCount);
+    setStartPos(indexToPx(startIndex, thumbnailWidth));
+    setEndPos(indexToPx(endIndex, thumbnailWidth));
+  }, [startFrame, endFrame, duration, thumbnailCount, thumbnailWidth]);
 
   const handleMouseDown = (e: React.MouseEvent, type: 'start' | 'end') => {
     e.preventDefault();
@@ -37,23 +41,24 @@ export const TrimHandles = ({
   };
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging || totalThumbnailWidth === 0) return;
+    if (!isDragging || thumbnailCount === 0) return;
 
     const container = document.getElementById('timeline-container');
     if (!container) return;
 
     const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left + container.scrollLeft;
-    const clampedX = Math.max(0, Math.min(Math.round(x), totalThumbnailWidth * zoom));
-    const time = pxToTime(clampedX, { duration, totalWidth: totalThumbnailWidth, zoom, scrollLeft: 0 });
-    const clampedTime = clampTime(time, duration);
+    const px = e.clientX - rect.left + container.scrollLeft;
+    const index = Math.max(0, Math.min(pxToIndex(px, thumbnailWidth), thumbnailCount - 1));
+    const time = (index / thumbnailCount) * duration;
 
     if (isDragging === 'start') {
-      const newStart = Math.min(clampedTime, endFrame - 0.1);
+      const endIndex = Math.floor((endFrame / duration) * thumbnailCount);
+      const newStart = index < endIndex ? time : endFrame - 0.1;
       onTrimChange(newStart, endFrame);
       onSeek(newStart);
     } else if (isDragging === 'end') {
-      const newEnd = Math.max(clampedTime, startFrame + 0.1);
+      const startIndex = Math.floor((startFrame / duration) * thumbnailCount);
+      const newEnd = index > startIndex ? time : startFrame + 0.1;
       onTrimChange(startFrame, newEnd);
       onSeek(newEnd);
     }
@@ -72,9 +77,9 @@ export const TrimHandles = ({
         window.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, duration, startFrame, endFrame, totalThumbnailWidth, zoom]);
+  }, [isDragging, duration, startFrame, endFrame, thumbnailCount, thumbnailWidth]);
 
-  if (totalThumbnailWidth === 0) return null;
+  if (thumbnailCount === 0) return null;
 
   return (
     <>
@@ -110,7 +115,7 @@ export const TrimHandles = ({
       {endFrame < duration && (
         <div
           className="absolute top-0 bottom-0 bg-background/60 pointer-events-none z-20"
-          style={{ left: `${endPos}px`, width: `${Math.round(totalThumbnailWidth * zoom) - endPos}px` }}
+          style={{ left: `${endPos}px`, width: `${thumbnailCount * thumbnailWidth - endPos}px` }}
         />
       )}
     </>
