@@ -301,72 +301,75 @@ export default function ProEditor() {
                   )}
                 </div>
 
-                {/* Playback Toolbar */}
-                {assetType === "video" && (
-                  <div className="bg-surface-elevated rounded-xl border border-border/50 p-4">
-                    <div className="flex items-center gap-4">
+                {/* Playback Toolbar - Always visible when video is uploaded */}
+                <div className="bg-surface-elevated/90 backdrop-blur-sm rounded-xl border border-border/50 p-4 shadow-lg animate-in fade-in duration-300">
+                  <div className="flex items-center gap-4">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={togglePlayPause}
+                      disabled={assetType !== "video"}
+                      className="text-foreground hover:text-neon hover:bg-neon/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      {isPlaying ? (
+                        <Pause className="w-5 h-5" />
+                      ) : (
+                        <Play className="w-5 h-5" />
+                      )}
+                    </Button>
+
+                    <span className="text-sm text-neon font-mono min-w-[60px]">
+                      {formatTime(currentTime)}
+                    </span>
+
+                    <Slider
+                      value={[currentTime]}
+                      max={duration || 100}
+                      step={0.1}
+                      onValueChange={handleSeek}
+                      disabled={assetType !== "video"}
+                      className="flex-1 [&_[role=slider]]:border-neon [&_[role=slider]]:bg-neon disabled:opacity-30"
+                    />
+
+                    <span className="text-sm text-muted-foreground font-mono min-w-[60px]">
+                      {formatTime(duration)}
+                    </span>
+
+                    <div className="flex items-center gap-2">
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={togglePlayPause}
-                        className="text-foreground hover:text-neon hover:bg-neon/10 transition-all"
+                        onClick={toggleMute}
+                        disabled={assetType !== "video"}
+                        className="text-foreground hover:text-neon hover:bg-neon/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                       >
-                        {isPlaying ? (
-                          <Pause className="w-5 h-5" />
+                        {isMuted || volume === 0 ? (
+                          <VolumeX className="w-4 h-4" />
                         ) : (
-                          <Play className="w-5 h-5" />
+                          <Volume2 className="w-4 h-4" />
                         )}
                       </Button>
-
-                      <span className="text-sm text-neon font-mono min-w-[60px]">
-                        {formatTime(currentTime)}
-                      </span>
-
                       <Slider
-                        value={[currentTime]}
-                        max={duration || 100}
+                        value={[isMuted ? 0 : volume]}
+                        max={1}
                         step={0.1}
-                        onValueChange={handleSeek}
-                        className="flex-1"
+                        onValueChange={handleVolumeChange}
+                        disabled={assetType !== "video"}
+                        className="w-24 [&_[role=slider]]:border-neon [&_[role=slider]]:bg-neon disabled:opacity-30"
                       />
-
-                      <span className="text-sm text-muted-foreground font-mono min-w-[60px]">
-                        {formatTime(duration)}
-                      </span>
-
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={toggleMute}
-                          className="text-foreground hover:text-neon hover:bg-neon/10 transition-all"
-                        >
-                          {isMuted || volume === 0 ? (
-                            <VolumeX className="w-4 h-4" />
-                          ) : (
-                            <Volume2 className="w-4 h-4" />
-                          )}
-                        </Button>
-                        <Slider
-                          value={[isMuted ? 0 : volume]}
-                          max={1}
-                          step={0.1}
-                          onValueChange={handleVolumeChange}
-                          className="w-24"
-                        />
-                      </div>
-
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={handleFullscreen}
-                        className="text-foreground hover:text-neon hover:bg-neon/10 transition-all"
-                      >
-                        <Maximize className="w-4 h-4" />
-                      </Button>
                     </div>
+
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={handleFullscreen}
+                      disabled={assetType !== "video"}
+                      className="text-foreground hover:text-neon hover:bg-neon/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <Maximize className="w-4 h-4" />
+                    </Button>
                   </div>
-                )}
+                </div>
               </div>
             ) : (
               <div className="text-center border-2 border-dashed border-border/50 rounded-xl p-16 max-w-2xl">
