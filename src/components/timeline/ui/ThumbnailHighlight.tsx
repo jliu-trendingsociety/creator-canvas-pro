@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { indexToPx } from "../coordinateSystem";
 
 interface ThumbnailHighlightProps {
   hoveredIndex: number | null;
@@ -28,7 +29,7 @@ export const ThumbnailHighlight = ({
     }
 
     // Calculate position using the same coordinate system as thumbnails
-    const leftPos = Math.round(targetIndex * thumbnailWidth);
+    const leftPos = indexToPx(targetIndex, thumbnailWidth);
 
     setHighlightStyle({
       left: leftPos,

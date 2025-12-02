@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useTimelineStore } from "../timelineStore";
-import { pxToTime } from "../coordinateSystem";
+import { indexToPx, pxToIndex } from "../coordinateSystem";
 import { formatTime } from "../timeEngine";
 import { ThumbnailHighlight } from "./ThumbnailHighlight";
 
@@ -39,9 +39,18 @@ export const ThumbnailStrip = ({
     }
   }, [thumbnails.length, thumbnailWidth, setTotalThumbnailWidth]);
 
-  const handleThumbnailClick = (index: number) => {
-    const time = (index / thumbnails.length) * duration;
-    onSeek(time);
+  const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const scrollContainer = containerRef.current.parentElement;
+    const scrollLeft = scrollContainer?.scrollLeft || 0;
+    const px = e.clientX - rect.left + scrollLeft;
+    const index = pxToIndex(px, thumbnailWidth);
+    
+    if (index >= 0 && index < thumbnails.length) {
+      const time = (index / thumbnails.length) * duration;
+      onSeek(time);
+    }
   };
 
   if (thumbnails.length === 0) {
@@ -66,16 +75,16 @@ export const ThumbnailStrip = ({
     <div className="relative">
       <div 
         ref={containerRef}
-        className="absolute top-0 left-0 flex flex-row whitespace-nowrap shrink-0 min-w-max gap-0"
+        className="absolute top-0 left-0 flex flex-row whitespace-nowrap shrink-0 min-w-max gap-0 cursor-pointer"
         style={{ 
           width: `${totalWidth}px`
         }}
+        onClick={handleContainerClick}
       >
       {thumbnails.map((thumb, index) => {
         const timeAtThumb = (index / thumbnails.length) * duration;
         const isInTrimRange = timeAtThumb >= startFrame && timeAtThumb <= endFrame;
-        const isActive = Math.abs(timeAtThumb - currentTime) < (duration / thumbnails.length);
-        const leftPos = Math.round(index * thumbnailWidth);
+        const leftPos = indexToPx(index, thumbnailWidth);
 
         return (
           <div
@@ -89,10 +98,6 @@ export const ThumbnailStrip = ({
             }}
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleThumbnailClick(index);
-            }}
           >
             <img
               src={thumb}
