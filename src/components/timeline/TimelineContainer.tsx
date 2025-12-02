@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useTimelineStore } from "./timelineStore";
 import { VideoTrack } from "./tracks/VideoTrack";
+import { ZoomControls } from "./ui/ZoomControls";
 
 interface TimelineContainerProps {
   thumbnails: string[];
@@ -52,6 +53,7 @@ export const TimelineContainer = ({
 
   return (
     <div className="flex-1 relative min-w-0">
+      <ZoomControls containerRef={containerRef} />
       <div
         id="timeline-container"
         ref={containerRef}

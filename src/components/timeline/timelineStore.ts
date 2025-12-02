@@ -28,7 +28,7 @@ export const useTimelineStore = create<TimelineState>((set) => ({
   activeTrack: null,
   
   // Actions
-  setZoom: (zoom) => set({ zoom }),
+  setZoom: (zoom) => set({ zoom: Math.max(0.2, Math.min(4.0, zoom)) }),
   setScrollLeft: (scrollLeft) => set({ scrollLeft }),
   setTotalThumbnailWidth: (totalThumbnailWidth) => set({ totalThumbnailWidth }),
   setTrackHeight: (trackId, height) => 
