@@ -57,3 +57,19 @@ export const getVisibleTimeRange = (
   const end = pxToTime(scrollLeft + viewportWidth, { duration, totalWidth });
   return { start, end };
 };
+
+/**
+ * Convert thumbnail index to pixel position
+ * Used for consistent positioning of thumbnails, highlights, and selections
+ */
+export const indexToPx = (index: number, thumbnailWidth: number): number => {
+  return Math.round(index * thumbnailWidth + TIMELINE_LEFT_OFFSET);
+};
+
+/**
+ * Convert pixel position to thumbnail index
+ * Used for click detection and hover interactions
+ */
+export const pxToIndex = (px: number, thumbnailWidth: number): number => {
+  return Math.floor((px - TIMELINE_LEFT_OFFSET) / thumbnailWidth);
+};
