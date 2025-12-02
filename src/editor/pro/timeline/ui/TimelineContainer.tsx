@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTimelineStore } from "../state/timelineStore";
 import { VideoTrack } from "./Track";
 import { TimelineTrackRow } from "./TimelineTrackRow";
@@ -27,15 +27,27 @@ export const TimelineContainer = ({
   onTrimChange,
 }: TimelineContainerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { tracks, setScrollLeft, resetTimeline } = useTimelineStore();
+  const { 
+    tracks, 
+    setScrollLeft, 
+    resetTimeline, 
+    setTotalThumbnailWidth,
+    zoom,
+  } = useTimelineStore();
+  
+  const [containerWidth, setContainerWidth] = useState(0);
+  const scrollPositionRef = useRef(0);
+  const isResizingRef = useRef(false);
 
   // Calculate layouts for all tracks
   const trackLayouts = TrackLayoutEngine.calculateLayout(tracks);
 
   // Handle scroll updates
   const handleScroll = () => {
-    if (containerRef.current) {
-      setScrollLeft(containerRef.current.scrollLeft);
+    if (containerRef.current && !isResizingRef.current) {
+      const newScrollLeft = containerRef.current.scrollLeft;
+      setScrollLeft(newScrollLeft);
+      scrollPositionRef.current = newScrollLeft;
     }
   };
 
@@ -46,17 +58,54 @@ export const TimelineContainer = ({
     };
   }, [resetTimeline]);
 
-  // Update scroll position on resize
+  // ResizeObserver for responsive width support
   useEffect(() => {
-    const handleResize = () => {
-      if (containerRef.current) {
-        setScrollLeft(containerRef.current.scrollLeft);
-      }
-    };
+    const container = containerRef.current;
+    if (!container) return;
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [setScrollLeft]);
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const newWidth = entry.contentRect.width;
+        
+        // Skip if width hasn't actually changed
+        if (Math.abs(newWidth - containerWidth) < 1) continue;
+        
+        isResizingRef.current = true;
+        
+        // Calculate new timeline width based on duration
+        // Use a minimum base width to ensure proper scaling
+        const baseWidth = Math.max(newWidth, 800);
+        const scaledWidth = baseWidth * zoom;
+        
+        // Update container width state
+        setContainerWidth(newWidth);
+        
+        // Update timeline width in store
+        setTotalThumbnailWidth(scaledWidth);
+        
+        // Preserve scroll position relative to the playhead
+        // This ensures stable scrolling during sidebar collapse/expand
+        requestAnimationFrame(() => {
+          if (container) {
+            // Restore the scroll position
+            container.scrollLeft = scrollPositionRef.current;
+            setScrollLeft(scrollPositionRef.current);
+          }
+          
+          // Add a small delay before allowing scroll updates again
+          setTimeout(() => {
+            isResizingRef.current = false;
+          }, 150);
+        });
+      }
+    });
+
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [containerWidth, setTotalThumbnailWidth, setScrollLeft, zoom]);
 
   // Clear selection when clicking empty space
   const handleContainerClick = () => {
@@ -76,7 +125,7 @@ export const TimelineContainer = ({
         <div
           id="timeline-container"
           ref={containerRef}
-          className="timeline-scroll relative bg-surface rounded-b-lg border border-t-0 border-border/30 overflow-x-auto overflow-y-auto flex-1"
+          className="timeline-scroll relative bg-surface rounded-b-lg border border-t-0 border-border/30 overflow-x-auto overflow-y-auto flex-1 transition-all duration-150 ease-in-out"
           style={{ maxHeight: `${Math.max(totalHeight + 40, 200)}px` }}
           onScroll={handleScroll}
           onClick={handleContainerClick}
@@ -116,7 +165,7 @@ export const TimelineContainer = ({
       <div
         id="timeline-container"
         ref={containerRef}
-        className="timeline-scroll relative h-14 bg-surface rounded-lg border border-border/30"
+        className="timeline-scroll relative h-14 bg-surface rounded-lg border border-border/30 transition-all duration-150 ease-in-out"
         onScroll={handleScroll}
       >
         <VideoTrack
