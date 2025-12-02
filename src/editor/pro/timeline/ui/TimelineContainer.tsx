@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useTimelineStore } from "../state/timelineStore";
 import { VideoTrack } from "./Track";
 import { TimelineTrackRow } from "./TimelineTrackRow";
+import { TimelineRuler } from "./TimelineRuler";
 import { ZoomControls } from "./ZoomControls";
 import { Playhead } from "./Playhead";
 import { TrackLayoutEngine } from "../engine/tracks/TrackLayoutEngine";
@@ -57,36 +58,52 @@ export const TimelineContainer = ({
     return () => window.removeEventListener('resize', handleResize);
   }, [setScrollLeft]);
 
+  // Clear selection when clicking empty space
+  const handleContainerClick = () => {
+    const { setSelectedClip } = useTimelineStore.getState();
+    setSelectedClip(null);
+  };
+
   // Multi-track mode
   if (tracks.length > 0) {
     const totalHeight = trackLayouts.reduce((sum, layout) => sum + layout.height, 0);
+    const rulerHeight = 24; // Height of the ruler
     
     return (
-      <div className="flex-1 relative min-w-0">
+      <div className="flex-1 relative min-w-0 flex flex-col">
         <ZoomControls containerRef={containerRef} />
+        <TimelineRuler duration={duration} />
         <div
           id="timeline-container"
           ref={containerRef}
-          className="timeline-scroll relative bg-surface rounded-lg border border-border/30 overflow-x-auto"
-          style={{ height: `${Math.max(totalHeight, 200)}px` }}
+          className="timeline-scroll relative bg-surface rounded-b-lg border border-t-0 border-border/30 overflow-x-auto overflow-y-auto flex-1"
+          style={{ maxHeight: `${Math.max(totalHeight + 40, 200)}px` }}
           onScroll={handleScroll}
+          onClick={handleContainerClick}
         >
-          {/* Render all tracks */}
-          {trackLayouts.map((layout, index) => {
-            const track = tracks.find((t) => t.id === layout.trackId);
-            if (!track) return null;
+          <div className="relative" style={{ minHeight: `${totalHeight}px` }}>
+            {/* Render all tracks */}
+            {trackLayouts.map((layout) => {
+              const track = tracks.find((t) => t.id === layout.trackId);
+              if (!track) return null;
+              
+              return (
+                <div
+                  key={track.id}
+                  className="absolute left-0 right-0"
+                  style={{ top: `${layout.yOffset}px` }}
+                >
+                  <TimelineTrackRow
+                    track={track}
+                    yOffset={layout.yOffset}
+                  />
+                </div>
+              );
+            })}
             
-            return (
-              <TimelineTrackRow
-                key={track.id}
-                track={track}
-                yOffset={layout.yOffset}
-              />
-            );
-          })}
-          
-          {/* Playhead spans all tracks */}
-          <Playhead currentTime={currentTime} duration={duration} height={totalHeight} />
+            {/* Playhead spans all tracks */}
+            <Playhead currentTime={currentTime} duration={duration} height={totalHeight} />
+          </div>
         </div>
       </div>
     );

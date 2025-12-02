@@ -1,5 +1,5 @@
-import { Track, Clip, useTimelineStore } from '../state/timelineStore';
-import { ClipEngine } from '../engine/tracks/ClipEngine';
+import { Track, useTimelineStore } from '../state/timelineStore';
+import { Clip } from './Clip';
 import { Video, Music, Sparkles } from 'lucide-react';
 
 interface TimelineTrackRowProps {
@@ -65,39 +65,16 @@ export const TimelineTrackRow = ({ track, yOffset }: TimelineTrackRowProps) => {
 
       {/* Track Content Area */}
       <div className="flex-1 relative bg-surface/20">
-        {track.clips.map((clip) => {
-          const { left, width } = ClipEngine.getClipPosition(
-            clip,
-            duration,
-            totalThumbnailWidth,
-            zoom
-          );
-          const isSelected = selectedClipId === clip.id;
-
-          return (
-            <div
-              key={clip.id}
-              className={`
-                absolute top-1 bottom-1 rounded cursor-pointer transition-all
-                ${isSelected
-                  ? 'bg-neon/20 border-2 border-neon shadow-[0_0_12px_hsl(var(--neon)/0.4)]'
-                  : 'bg-primary/40 border border-primary/60 hover:bg-primary/60'
-                }
-              `}
-              style={{
-                left: `${left}px`,
-                width: `${width}px`,
-              }}
-              onClick={(e) => handleClipClick(clip.id, e)}
-            >
-              <div className="px-2 py-1 h-full flex items-center">
-                <span className="text-xs text-foreground/80 truncate font-medium">
-                  {clip.src.split('/').pop()?.split('.')[0] || 'Clip'}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+        {track.clips.map((clip) => (
+          <Clip
+            key={clip.id}
+            clip={clip}
+            trackId={track.id}
+            duration={duration}
+            totalWidth={totalThumbnailWidth}
+            zoom={zoom}
+          />
+        ))}
       </div>
     </div>
   );
