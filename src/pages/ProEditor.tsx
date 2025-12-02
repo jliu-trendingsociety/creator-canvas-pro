@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronLeft, ChevronRight, Sparkles, Video, Film } from "lucide-react";
+import { Upload, Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, ChevronLeft, ChevronRight, Sparkles, Video, Film, Maximize2, Minimize2 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { useVideoThumbnails } from "@/hooks/useVideoThumbnails";
@@ -24,6 +24,7 @@ export default function ProEditor() {
   const [isDragging, setIsDragging] = useState(false);
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
+  const [viewerFocusMode, setViewerFocusMode] = useState(false);
   const [showSafeFrames, setShowSafeFrames] = useState(false);
   const [startFrame, setStartFrame] = useState(0);
   const [endFrame, setEndFrame] = useState(0);
@@ -58,6 +59,18 @@ export default function ProEditor() {
       renderEngine.prepare(renderTracks);
     }
   }, [tracks, renderEngine]);
+
+  // ESC key handler to exit focus mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && viewerFocusMode) {
+        setViewerFocusMode(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [viewerFocusMode]);
 
   // Extract thumbnails from the uploaded video
   const { thumbnails, isExtracting } = useVideoThumbnails({
@@ -374,11 +387,43 @@ export default function ProEditor() {
         {/* CENTER + BOTTOM - Video Canvas and Timeline */}
         <div className="flex-1 flex flex-col border-r border-border/50 min-w-0">
           {/* CENTER - Video Canvas */}
-          <div className="flex-1 bg-background flex flex-col items-center justify-center p-4 md:p-8">
+          <div 
+            className={`bg-background flex flex-col items-center justify-center p-4 md:p-8 transition-all duration-200 ease-in-out ${
+              viewerFocusMode ? 'flex-1' : 'flex-[0.6]'
+            }`}
+          >
             {uploadedVideo ? (
-              <div className="w-full max-w-5xl space-y-4 animate-in fade-in duration-500">
+              <div className="w-full max-w-5xl space-y-4 animate-in fade-in duration-500 h-full flex flex-col">
+                {/* Video Canvas Header with Focus Mode Toggle */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">VIEWER</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setViewerFocusMode(!viewerFocusMode)}
+                    className="text-foreground hover:text-neon hover:bg-neon/10 transition-all"
+                    title={viewerFocusMode ? "Exit Focus Mode (ESC)" : "Enter Focus Mode"}
+                  >
+                    {viewerFocusMode ? (
+                      <>
+                        <Minimize2 className="w-4 h-4 mr-2" />
+                        Exit Focus
+                      </>
+                    ) : (
+                      <>
+                        <Maximize2 className="w-4 h-4 mr-2" />
+                        Focus Mode
+                      </>
+                    )}
+                  </Button>
+                </div>
+
                 {/* Video Canvas - MasterCanvas Compositor */}
-                <div className="relative w-full aspect-video bg-surface rounded-xl overflow-hidden border border-border shadow-2xl">
+                <div className={`relative w-full bg-surface rounded-xl overflow-hidden border border-border shadow-2xl transition-all duration-200 ${
+                  viewerFocusMode ? 'flex-1' : 'aspect-video'
+                }`}>
                   {tracks.length > 0 ? (
                     <MasterCanvas
                       engine={renderEngine}
@@ -506,7 +551,17 @@ export default function ProEditor() {
           </div>
 
           {/* BOTTOM - Timeline */}
-          <div className="h-48 lg:h-80 border-t border-border/50 bg-surface/50 backdrop-blur-sm p-3 md:p-6">
+          <div 
+            className={`border-t border-border/50 bg-surface/50 backdrop-blur-sm p-3 md:p-6 transition-all duration-200 ease-in-out ${
+              viewerFocusMode 
+                ? 'h-32' 
+                : tracks.length > 3 
+                  ? 'h-96' 
+                  : tracks.length > 1 
+                    ? 'h-80' 
+                    : 'h-48 lg:h-80'
+            }`}
+          >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
                 <h3 className="text-xs font-bold text-neon tracking-wider">TIMELINE</h3>
