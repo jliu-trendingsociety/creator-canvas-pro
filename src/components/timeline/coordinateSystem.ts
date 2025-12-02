@@ -11,15 +11,19 @@ export interface CoordinateSystemParams {
   scrollLeft?: number;
 }
 
+// Timeline coordinate offset - applied uniformly to all positioned elements
+export const TIMELINE_LEFT_OFFSET = 0;
+
 /**
  * Convert time (seconds) to pixel position
+ * Always returns integer pixels to prevent sub-pixel drift
  */
 export const timeToPx = (
   time: number,
   { duration, totalWidth, zoom = 1 }: CoordinateSystemParams
 ): number => {
   if (duration === 0 || totalWidth === 0) return 0;
-  return (time / duration) * totalWidth * zoom;
+  return Math.round((time / duration) * totalWidth * zoom);
 };
 
 /**

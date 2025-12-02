@@ -24,8 +24,8 @@ export const TrimHandles = ({
 
   // Update positions when props or timeline state change
   useEffect(() => {
-    const startPx = timeToPx(startFrame, { duration, totalWidth: totalThumbnailWidth, zoom });
-    const endPx = timeToPx(endFrame, { duration, totalWidth: totalThumbnailWidth, zoom });
+    const startPx = Math.round(timeToPx(startFrame, { duration, totalWidth: totalThumbnailWidth, zoom }));
+    const endPx = Math.round(timeToPx(endFrame, { duration, totalWidth: totalThumbnailWidth, zoom }));
     setStartPos(startPx);
     setEndPos(endPx);
   }, [startFrame, endFrame, duration, totalThumbnailWidth, zoom]);
@@ -44,7 +44,7 @@ export const TrimHandles = ({
 
     const rect = container.getBoundingClientRect();
     const x = e.clientX - rect.left + container.scrollLeft;
-    const clampedX = Math.max(0, Math.min(x, totalThumbnailWidth));
+    const clampedX = Math.max(0, Math.min(Math.round(x), totalThumbnailWidth * zoom));
     const time = pxToTime(clampedX, { duration, totalWidth: totalThumbnailWidth, zoom, scrollLeft: 0 });
     const clampedTime = clampTime(time, duration);
 
@@ -110,7 +110,7 @@ export const TrimHandles = ({
       {endFrame < duration && (
         <div
           className="absolute top-0 bottom-0 bg-background/60 pointer-events-none z-20"
-          style={{ left: `${endPos}px`, width: `${totalThumbnailWidth - endPos}px` }}
+          style={{ left: `${endPos}px`, width: `${Math.round(totalThumbnailWidth * zoom) - endPos}px` }}
         />
       )}
     </>

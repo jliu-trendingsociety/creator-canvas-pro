@@ -23,11 +23,11 @@ export const ZoomControls = ({ containerRef }: ZoomControlsProps) => {
     // Apply new zoom
     setZoom(newZoom);
 
-    // Preserve scroll position after zoom
-    setTimeout(() => {
-      const newScrollLeft = center * newZoom - viewportWidth / 2;
+    // Preserve scroll position after zoom using rounded values
+    requestAnimationFrame(() => {
+      const newScrollLeft = Math.round(center * newZoom - viewportWidth / 2);
       container.scrollLeft = Math.max(0, newScrollLeft);
-    }, 0);
+    });
   };
 
   const handleReset = () => {
