@@ -43,7 +43,7 @@ export const TimelineTrackRow = ({ track, yOffset }: TimelineTrackRowProps) => {
 
   return (
     <div
-      className="relative w-full border-b border-border/20 bg-background overflow-hidden flex"
+      className="relative flex"
       style={{ height: `${track.height}px` }}
       onClick={handleTrackClick}
     >

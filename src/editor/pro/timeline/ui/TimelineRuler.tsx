@@ -7,68 +7,45 @@ interface TimelineRulerProps {
 }
 
 export const TimelineRuler = ({ duration }: TimelineRulerProps) => {
-  const { zoom, totalThumbnailWidth, scrollLeft } = useTimelineStore();
+  const { zoom, totalThumbnailWidth } = useTimelineStore();
 
   if (duration === 0 || totalThumbnailWidth === 0) return null;
 
-  // Calculate intervals based on zoom level
-  const getIntervals = () => {
-    if (zoom >= 3) {
-      return { minor: 0.1, major: 1 }; // 100ms minor, 1s major at high zoom
-    } else if (zoom >= 1.5) {
-      return { minor: 0.25, major: 1 }; // 250ms minor, 1s major at medium zoom
-    } else {
-      return { minor: 1, major: 5 }; // 1s minor, 5s major at low zoom
-    }
+  // Calculate tick interval based on zoom level
+  const getTickInterval = () => {
+    if (zoom >= 2) return 1; // Every second at high zoom
+    if (zoom >= 1) return 5; // Every 5 seconds at medium zoom
+    return 10; // Every 10 seconds at low zoom
   };
 
-  const { minor, major } = getIntervals();
-  const ticks: Array<{ time: number; isMajor: boolean }> = [];
+  const tickInterval = getTickInterval();
+  const ticks: number[] = [];
   
-  for (let time = 0; time <= duration; time += minor) {
-    const isMajor = Math.abs(time % major) < 0.01; // Account for floating point precision
-    ticks.push({ time, isMajor });
+  for (let time = 0; time <= duration; time += tickInterval) {
+    ticks.push(time);
   }
 
   return (
-    <div className="flex w-full h-8 border-b border-border/30 bg-surface/20 relative">
-      {/* Left spacer matching track header width */}
-      <div className="w-40 flex-shrink-0 border-r border-border/30 bg-surface/30 flex items-center px-3">
-        <span className="text-[10px] text-muted-foreground font-mono">TIMECODE</span>
+    <div className="sticky top-0 left-0 w-full h-6 bg-background/95 border-b border-border/30 z-10 flex items-center">
+      <div className="w-32 flex-shrink-0 border-r border-border/30 px-3 text-[10px] text-muted-foreground">
+        TIME
       </div>
-      
-      {/* Ruler ticks area - scrolls with content */}
-      <div className="flex-1 relative overflow-hidden bg-surface/10">
-        <div 
-          className="relative h-full"
-          style={{ transform: `translateX(-${scrollLeft}px)` }}
-        >
-          {ticks.map(({ time, isMajor }) => {
+      <div className="flex-1 relative">
+        {ticks.map((time) => {
           const left = timeToPx(time, { duration, totalWidth: totalThumbnailWidth, zoom });
-          
           return (
             <div
               key={time}
-              className="absolute top-0 bottom-0 flex flex-col justify-start pointer-events-none"
+              className="absolute top-0 flex flex-col items-center"
               style={{ left: `${left}px` }}
             >
-              {/* Tick mark */}
-              <div 
-                className={`w-px bg-border ${
-                  isMajor ? 'h-3 bg-border/80' : 'h-1.5 bg-border/40'
-                }`}
-              />
-              
-              {/* Label for major ticks */}
-              {isMajor && (
-                <span className="text-[10px] text-foreground font-mono font-medium mt-0.5 ml-1">
-                  {formatTime(time)}
-                </span>
-              )}
+              <div className="w-px h-2 bg-border/50" />
+              <span className="text-[9px] text-muted-foreground mt-0.5">
+                {formatTime(time)}
+              </span>
             </div>
           );
         })}
-        </div>
       </div>
     </div>
   );

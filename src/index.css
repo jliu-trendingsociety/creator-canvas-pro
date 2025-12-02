@@ -81,26 +81,31 @@ All colors MUST be HSL.
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   }
 
+  .timeline-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
   .timeline-scroll::-webkit-scrollbar {
-    height: 6px;
-  }
-
-  .timeline-scroll::-webkit-scrollbar-thumb {
-    background: rgba(212, 255, 0, 0.4);
-    border-radius: 3px;
-  }
-
-  .timeline-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(212, 255, 0, 0.7);
+    height: 4px;
   }
 
   .timeline-scroll::-webkit-scrollbar-track {
     background: transparent;
   }
 
+  .timeline-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(212, 255, 0, 0.35);
+    border-radius: 9999px;
+  }
+
+  .timeline-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(212, 255, 0, 0.6);
+  }
+
   /* Firefox */
   .timeline-scroll {
     scrollbar-width: thin;
-    scrollbar-color: rgba(212, 255, 0, 0.4) transparent;
+    scrollbar-color: rgba(212, 255, 0, 0.35) transparent;
   }
 }

@@ -1,7 +1,7 @@
 /**
- * UNIFIED TIMELINE COORDINATE SYSTEM
- * Single source of truth for all time ↔ pixel conversions
- * All timeline components MUST use these functions
+ * Coordinate System Module
+ * Handles all time ↔ pixel conversions for the timeline
+ * Uses real scrollable thumbnail width, not container width
  */
 
 export interface CoordinateSystemParams {
@@ -15,45 +15,28 @@ export interface CoordinateSystemParams {
 export const TIMELINE_LEFT_OFFSET = 0;
 
 /**
- * Calculate pixels per second based on zoom and total width
- * This is the fundamental unit of the coordinate system
- */
-export const getPixelsPerSecond = (
-  duration: number,
-  totalWidth: number,
-  zoom: number = 1
-): number => {
-  if (duration === 0) return 0;
-  return Math.round((totalWidth / duration) * zoom);
-};
-
-/**
  * Convert time (seconds) to pixel position
- * ALWAYS returns integer pixels to prevent sub-pixel drift
- * Used by: ruler ticks, playhead, clip positioning, thumbnails
+ * Always returns integer pixels to prevent sub-pixel drift
  */
 export const timeToPx = (
   time: number,
   { duration, totalWidth, zoom = 1 }: CoordinateSystemParams
 ): number => {
   if (duration === 0 || totalWidth === 0) return 0;
-  const pixelsPerSecond = getPixelsPerSecond(duration, totalWidth, zoom);
-  return Math.round(time * pixelsPerSecond);
+  return Math.round((time / duration) * totalWidth * zoom);
 };
 
 /**
  * Convert pixel position to time (seconds)
  * Accounts for scroll offset
- * Used by: click detection, scrubbing, drag operations
  */
 export const pxToTime = (
   px: number,
   { duration, totalWidth, zoom = 1, scrollLeft = 0 }: CoordinateSystemParams
 ): number => {
-  if (totalWidth === 0 || duration === 0) return 0;
-  const pixelsPerSecond = getPixelsPerSecond(duration, totalWidth, zoom);
-  const adjustedPx = px + (scrollLeft || 0);
-  return adjustedPx / pixelsPerSecond;
+  if (totalWidth === 0) return 0;
+  const adjustedPx = px + scrollLeft;
+  return (adjustedPx / (totalWidth * zoom)) * duration;
 };
 
 /**
@@ -67,18 +50,17 @@ export const clampTime = (time: number, duration: number): number => {
  * Get visible time range for the current viewport
  */
 export const getVisibleTimeRange = (
-  { duration, totalWidth, zoom = 1, scrollLeft = 0 }: CoordinateSystemParams,
+  { duration, totalWidth, scrollLeft = 0 }: CoordinateSystemParams,
   viewportWidth: number
 ): { start: number; end: number } => {
-  const start = pxToTime(scrollLeft, { duration, totalWidth, zoom });
-  const end = pxToTime(scrollLeft + viewportWidth, { duration, totalWidth, zoom });
+  const start = pxToTime(scrollLeft, { duration, totalWidth });
+  const end = pxToTime(scrollLeft + viewportWidth, { duration, totalWidth });
   return { start, end };
 };
 
 /**
  * Convert thumbnail index to pixel position
- * ALWAYS returns integer pixels
- * Used for: thumbnail positioning, highlight boxes, selection rectangles
+ * Used for consistent positioning of thumbnails, highlights, and selections
  */
 export const indexToPx = (index: number, thumbnailWidth: number): number => {
   return Math.round(index * thumbnailWidth + TIMELINE_LEFT_OFFSET);
@@ -86,7 +68,7 @@ export const indexToPx = (index: number, thumbnailWidth: number): number => {
 
 /**
  * Convert pixel position to thumbnail index
- * Used for: click detection, hover interactions
+ * Used for click detection and hover interactions
  */
 export const pxToIndex = (px: number, thumbnailWidth: number): number => {
   return Math.floor((px - TIMELINE_LEFT_OFFSET) / thumbnailWidth);
@@ -99,14 +81,13 @@ export const pxToIndex = (px: number, thumbnailWidth: number): number => {
 
 /**
  * Convert track index to Y offset
- * ALWAYS returns integer pixels
  */
 export const trackIndexToY = (trackIndex: number, trackHeights: number[]): number => {
   let yOffset = 0;
   for (let i = 0; i < trackIndex; i++) {
     yOffset += trackHeights[i] || 0;
   }
-  return Math.round(yOffset);
+  return yOffset;
 };
 
 /**
