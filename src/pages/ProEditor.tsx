@@ -7,7 +7,10 @@ import { useVideoThumbnails } from "@/hooks/useVideoThumbnails";
 import { TimelineContainer } from "@/editor/pro/timeline/ui/TimelineContainer";
 import { useToast } from "@/hooks/use-toast";
 import { useTimelineStore } from "@/editor/pro/timeline/state/timelineStore";
-import { RenderEngine } from "@/editor/pro/renderer/RenderEngine";
+import { RenderEngine as LegacyRenderEngine } from "@/editor/pro/renderer/RenderEngine";
+import { RenderEngine } from "@/editor/pro/renderer/engine/RenderEngine";
+import { MasterCanvas } from "@/editor/pro/renderer/components/MasterCanvas";
+import { TimelineTrackData } from "@/editor/pro/renderer/engine/types";
 
 export default function ProEditor() {
   const { toast } = useToast();
@@ -27,17 +30,34 @@ export default function ProEditor() {
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const renderEngineRef = useRef<RenderEngine | null>(null);
+  const legacyRenderEngineRef = useRef<LegacyRenderEngine | null>(null);
+  const renderEngine = useRef(new RenderEngine()).current;
   
   const { tracks } = useTimelineStore();
 
-  // Initialize render engine
+  // Initialize legacy render engine
   useEffect(() => {
-    if (!renderEngineRef.current) {
-      renderEngineRef.current = new RenderEngine();
-      renderEngineRef.current.initCompositor(1920, 1080);
+    if (!legacyRenderEngineRef.current) {
+      legacyRenderEngineRef.current = new LegacyRenderEngine();
+      legacyRenderEngineRef.current.initCompositor(1920, 1080);
     }
   }, []);
+
+  // Prepare render engine with timeline tracks
+  useEffect(() => {
+    if (tracks.length > 0) {
+      const renderTracks: TimelineTrackData[] = tracks.flatMap((track) =>
+        track.clips.map((clip) => ({
+          id: clip.id,
+          type: track.type === 'video' ? 'video' as const : track.type === 'audio' ? 'audio' as const : 'image' as const,
+          startTime: clip.start,
+          endTime: clip.end,
+          src: clip.src,
+        }))
+      );
+      renderEngine.prepare(renderTracks);
+    }
+  }, [tracks, renderEngine]);
 
   // Extract thumbnails from the uploaded video
   const { thumbnails, isExtracting } = useVideoThumbnails({
@@ -133,7 +153,7 @@ export default function ProEditor() {
   };
 
   const handleGenerateRenderPreview = () => {
-    if (!renderEngineRef.current) {
+    if (!legacyRenderEngineRef.current) {
       toast({
         title: "Render engine not initialized",
         variant: "destructive",
@@ -142,7 +162,7 @@ export default function ProEditor() {
     }
 
     // Evaluate timeline and build render graph
-    const graph = renderEngineRef.current.evaluateTimeline(tracks, duration);
+    const graph = legacyRenderEngineRef.current.evaluateTimeline(tracks, duration);
 
     // Log to console
     console.log('[ProEditor] Render Graph Generated:', graph);
@@ -361,9 +381,25 @@ export default function ProEditor() {
           <div className="flex-1 bg-background flex flex-col items-center justify-center p-4 md:p-8">
             {uploadedVideo ? (
               <div className="w-full max-w-5xl space-y-4 animate-in fade-in duration-500">
-                {/* Video Canvas */}
+                {/* Video Canvas - MasterCanvas Compositor */}
                 <div className="relative w-full aspect-video bg-surface rounded-xl overflow-hidden border border-border shadow-2xl">
-                  {assetType === "video" ? (
+                  {tracks.length > 0 ? (
+                    <MasterCanvas
+                      engine={renderEngine}
+                      getState={() => ({
+                        currentTime,
+                        tracks: tracks.flatMap((track) =>
+                          track.clips.map((clip) => ({
+                            id: clip.id,
+                            type: track.type === 'video' ? 'video' as const : track.type === 'audio' ? 'audio' as const : 'image' as const,
+                            startTime: clip.start,
+                            endTime: clip.end,
+                            src: clip.src,
+                          }))
+                        ),
+                      })}
+                    />
+                  ) : assetType === "video" ? (
                     <video
                       ref={videoRef}
                       src={uploadedVideo}
