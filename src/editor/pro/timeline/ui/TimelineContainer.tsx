@@ -76,13 +76,13 @@ export const TimelineContainer = ({
         <ZoomControls containerRef={containerRef} />
       </div>
 
-      {/* Time Ruler */}
+      {/* Time Ruler - Fixed at top, scrolls with content */}
       <TimelineRuler duration={duration} />
 
       {/* Track Area - Full Width Edge to Edge */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Track Headers Column (Fixed Left) */}
-        <div className="w-40 flex-shrink-0 border-r border-border/30 bg-surface/30">
+        <div className="w-40 flex-shrink-0 border-r border-border/30 bg-surface/30 relative z-10">
           {/* Video Track Header */}
           <div className="h-20 border-b border-border/20 px-3 py-2 flex items-center gap-2">
             <Video className="w-4 h-4 text-neon" />
@@ -130,8 +130,10 @@ export const TimelineContainer = ({
               </div>
             </div>
 
-            {/* Playhead (spans all tracks) */}
-            <Playhead currentTime={currentTime} duration={duration} height={136} />
+            {/* Playhead (spans all tracks) - positioned from ruler top */}
+            <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{ height: '136px' }}>
+              <Playhead currentTime={currentTime} duration={duration} height={136} />
+            </div>
           </div>
         </div>
       </div>

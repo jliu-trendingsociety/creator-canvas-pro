@@ -8,27 +8,42 @@ interface PlayheadProps {
   height?: number;
 }
 
-export const Playhead = ({ currentTime, duration, height = 40 }: PlayheadProps) => {
-  const { totalThumbnailWidth, scrollLeft, zoom } = useTimelineStore();
+export const Playhead = ({ currentTime, duration, height = 136 }: PlayheadProps) => {
+  const { totalThumbnailWidth, zoom } = useTimelineStore();
   const [position, setPosition] = useState(0);
 
   useEffect(() => {
     if (totalThumbnailWidth === 0) return;
     const px = timeToPx(currentTime, { duration, totalWidth: totalThumbnailWidth, zoom });
-    setPosition(px);
+    // Snap to pixel boundaries for crisp rendering
+    setPosition(Math.round(px));
   }, [currentTime, duration, totalThumbnailWidth, zoom]);
 
   if (totalThumbnailWidth === 0) return null;
 
   return (
     <div
-      className="absolute top-0 bottom-0 w-px bg-neon z-50 pointer-events-none shadow-[0_0_10px_hsl(var(--neon)/0.6)]"
+      className="absolute top-0 pointer-events-none z-50"
       style={{ 
         left: `${position}px`,
-        height: `${height}px`
+        width: '2px',
+        height: `${height}px`,
       }}
     >
-      <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-neon rounded-full shadow-[0_0_8px_hsl(var(--neon)/0.8)]" />
+      {/* Playhead line - Premiere yellow */}
+      <div className="w-full h-full bg-neon" />
+      
+      {/* Playhead head - triangle */}
+      <div 
+        className="absolute -top-1 left-1/2 -translate-x-1/2"
+        style={{
+          width: 0,
+          height: 0,
+          borderLeft: '5px solid transparent',
+          borderRight: '5px solid transparent',
+          borderTop: '6px solid hsl(var(--neon))',
+        }}
+      />
     </div>
   );
 };
