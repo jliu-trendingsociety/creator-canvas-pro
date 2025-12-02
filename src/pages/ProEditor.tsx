@@ -237,18 +237,24 @@ export default function ProEditor() {
       <div className="flex-1 flex overflow-hidden flex-col lg:flex-row">
         {/* LEFT PANEL - Control Panel */}
         <aside 
-          className={`border-r border-border/50 bg-surface overflow-y-auto transition-all duration-300 ${
-            leftPanelCollapsed ? 'hidden' : 'w-full lg:w-80'
+          className={`border-r border-border/50 bg-surface overflow-y-auto transition-all duration-200 ease-in-out relative ${
+            leftPanelCollapsed ? 'w-8' : 'w-full lg:w-80'
           }`}
         >
-          <div className="p-6 space-y-6">
-            {/* Collapse Toggle */}
-            <button
-              onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
-              className="absolute -right-3 top-20 z-10 bg-surface-elevated border border-border rounded-full p-1 hover:bg-muted transition-colors"
-            >
+          {/* Collapse Toggle */}
+          <button
+            onClick={() => setLeftPanelCollapsed(!leftPanelCollapsed)}
+            className="absolute right-1 top-4 z-10 bg-surface-elevated border border-border rounded p-1 hover:bg-muted transition-colors"
+            title={leftPanelCollapsed ? "Expand panel" : "Collapse panel"}
+          >
+            {leftPanelCollapsed ? (
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            ) : (
               <ChevronLeft className="w-4 h-4 text-muted-foreground" />
-            </button>
+            )}
+          </button>
+
+          <div className={`p-6 space-y-6 ${leftPanelCollapsed ? 'hidden' : ''}`}>
 
             {/* STEP 1 — VIDEO INPUT */}
             <div className="space-y-4">
@@ -364,16 +370,6 @@ export default function ProEditor() {
             )}
           </div>
         </aside>
-
-        {/* Collapse Toggle for Left Panel (when collapsed) */}
-        {leftPanelCollapsed && (
-          <button
-            onClick={() => setLeftPanelCollapsed(false)}
-            className="absolute left-0 top-20 z-10 bg-surface-elevated border border-border rounded-r-lg p-2 hover:bg-muted transition-colors"
-          >
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </button>
-        )}
 
         {/* CENTER + BOTTOM - Video Canvas and Timeline */}
         <div className="flex-1 flex flex-col border-r border-border/50 min-w-0">
@@ -587,18 +583,24 @@ export default function ProEditor() {
 
         {/* RIGHT PANEL - Prompt & Variations */}
         <aside 
-          className={`border-l border-border/50 bg-surface overflow-y-auto transition-all duration-300 ${
-            rightPanelCollapsed ? 'hidden' : 'w-full lg:w-96'
+          className={`border-l border-border/50 bg-surface overflow-y-auto transition-all duration-200 ease-in-out relative ${
+            rightPanelCollapsed ? 'w-8' : 'w-full lg:w-96'
           }`}
         >
-          <div className="p-6 space-y-6">
-            {/* Collapse Toggle */}
-            <button
-              onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
-              className="absolute -left-3 top-20 z-10 bg-surface-elevated border border-border rounded-full p-1 hover:bg-muted transition-colors"
-            >
+          {/* Collapse Toggle */}
+          <button
+            onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
+            className="absolute left-1 top-4 z-10 bg-surface-elevated border border-border rounded p-1 hover:bg-muted transition-colors"
+            title={rightPanelCollapsed ? "Expand panel" : "Collapse panel"}
+          >
+            {rightPanelCollapsed ? (
+              <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+            ) : (
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </button>
+            )}
+          </button>
+
+          <div className={`p-6 space-y-6 ${rightPanelCollapsed ? 'hidden' : ''}`}>
 
             {/* STEP 3 — AI TRANSFORMATION */}
             <div className="space-y-4">
@@ -652,16 +654,6 @@ export default function ProEditor() {
             </div>
           </div>
         </aside>
-
-        {/* Collapse Toggle for Right Panel (when collapsed) */}
-        {rightPanelCollapsed && (
-          <button
-            onClick={() => setRightPanelCollapsed(false)}
-            className="absolute right-0 top-20 z-10 bg-surface-elevated border border-border rounded-l-lg p-2 hover:bg-muted transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4 text-muted-foreground" />
-          </button>
-        )}
       </div>
     </div>
   );
