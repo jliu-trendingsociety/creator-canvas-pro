@@ -5,9 +5,10 @@ import { useTimelineStore } from "../state/timelineStore";
 interface PlayheadProps {
   currentTime: number;
   duration: number;
+  height?: number;
 }
 
-export const Playhead = ({ currentTime, duration }: PlayheadProps) => {
+export const Playhead = ({ currentTime, duration, height = 40 }: PlayheadProps) => {
   const { totalThumbnailWidth, scrollLeft, zoom } = useTimelineStore();
   const [position, setPosition] = useState(0);
 
@@ -24,7 +25,7 @@ export const Playhead = ({ currentTime, duration }: PlayheadProps) => {
       className="absolute top-0 w-0.5 bg-neon shadow-[0_0_10px_hsl(var(--neon)/0.6)] pointer-events-none z-50"
       style={{ 
         left: `${position}px`,
-        height: '40px'
+        height: `${height}px`
       }}
     >
       <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-neon rounded-full shadow-[0_0_8px_hsl(var(--neon)/0.8)]" />
