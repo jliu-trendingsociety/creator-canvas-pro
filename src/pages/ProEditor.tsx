@@ -127,25 +127,25 @@ export default function ProEditor() {
   return (
     <div className="h-screen w-full flex flex-col bg-background overflow-hidden">
       {/* Top Header */}
-      <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-surface shadow-lg">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-neon">PRO EDITOR</h1>
-          <Badge className="bg-neon/20 text-neon border-neon/50 hover:bg-neon/30">
-            <Sparkles className="w-3 h-3 mr-1" />
+      <header className="h-14 md:h-16 border-b border-border flex items-center justify-between px-3 md:px-6 bg-surface shadow-lg">
+        <div className="flex items-center gap-2 md:gap-3">
+          <h1 className="text-lg md:text-2xl font-bold text-neon">PRO EDITOR</h1>
+          <Badge className="bg-neon/20 text-neon border-neon/50 hover:bg-neon/30 text-xs">
+            <Sparkles className="w-2.5 h-2.5 md:w-3 md:h-3 mr-1" />
             PRO
           </Badge>
         </div>
-        <Button className="bg-neon text-background hover:bg-neon-glow font-bold transition-all hover:shadow-[0_0_20px_rgba(186,230,55,0.4)]">
-          Export Video
+        <Button className="bg-neon text-background hover:bg-neon-glow font-bold transition-all hover:shadow-[0_0_20px_rgba(186,230,55,0.4)] text-xs md:text-sm px-3 md:px-4">
+          Export
         </Button>
       </header>
 
       {/* Main Layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden flex-col lg:flex-row">
         {/* LEFT PANEL - Control Panel */}
         <aside 
           className={`border-r border-border/50 bg-surface overflow-y-auto transition-all duration-300 ${
-            leftPanelCollapsed ? 'w-0' : 'w-80'
+            leftPanelCollapsed ? 'hidden' : 'w-full lg:w-80'
           }`}
         >
           <div className="p-6 space-y-6">
@@ -283,9 +283,9 @@ export default function ProEditor() {
         )}
 
         {/* CENTER + BOTTOM - Video Canvas and Timeline */}
-        <div className="flex-1 flex flex-col border-r border-border/50">
+        <div className="flex-1 flex flex-col border-r border-border/50 min-w-0">
           {/* CENTER - Video Canvas */}
-          <div className="flex-1 bg-background flex flex-col items-center justify-center p-8">
+          <div className="flex-1 bg-background flex flex-col items-center justify-center p-4 md:p-8">
             {uploadedVideo ? (
               <div className="w-full max-w-5xl space-y-4 animate-in fade-in duration-500">
                 {/* Video Canvas */}
@@ -316,8 +316,8 @@ export default function ProEditor() {
                 </div>
 
                 {/* Playback Toolbar - Always visible when video is uploaded */}
-                <div className="bg-surface-elevated/90 backdrop-blur-sm rounded-xl border border-border/50 p-4 shadow-lg animate-in fade-in duration-300">
-                  <div className="flex items-center gap-4">
+                <div className="bg-surface-elevated/90 backdrop-blur-sm rounded-xl border border-border/50 p-2 md:p-4 shadow-lg animate-in fade-in duration-300">
+                  <div className="flex items-center gap-1 md:gap-4">
                     <Button
                       size="icon"
                       variant="ghost"
@@ -332,7 +332,7 @@ export default function ProEditor() {
                       )}
                     </Button>
 
-                    <span className="text-sm text-neon font-mono min-w-[60px]">
+                    <span className="text-xs md:text-sm text-neon font-mono min-w-[50px] md:min-w-[60px]">
                       {formatTime(currentTime)}
                     </span>
 
@@ -345,7 +345,7 @@ export default function ProEditor() {
                       className="flex-1 [&_[role=slider]]:border-neon [&_[role=slider]]:bg-neon disabled:opacity-30"
                     />
 
-                    <span className="text-sm text-muted-foreground font-mono min-w-[60px]">
+                    <span className="text-xs md:text-sm text-muted-foreground font-mono min-w-[50px] md:min-w-[60px]">
                       {formatTime(duration)}
                     </span>
 
@@ -369,7 +369,7 @@ export default function ProEditor() {
                         step={0.1}
                         onValueChange={handleVolumeChange}
                         disabled={assetType !== "video"}
-                        className="w-24 [&_[role=slider]]:border-neon [&_[role=slider]]:bg-neon disabled:opacity-30"
+                        className="w-16 md:w-24 [&_[role=slider]]:border-neon [&_[role=slider]]:bg-neon disabled:opacity-30"
                       />
                     </div>
 
@@ -401,7 +401,7 @@ export default function ProEditor() {
           </div>
 
           {/* BOTTOM - Timeline */}
-          <div className="h-80 border-t border-border/50 bg-surface/50 backdrop-blur-sm p-6">
+          <div className="h-48 lg:h-80 border-t border-border/50 bg-surface/50 backdrop-blur-sm p-3 md:p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
                 <h3 className="text-xs font-bold text-neon tracking-wider">TIMELINE</h3>
@@ -482,7 +482,7 @@ export default function ProEditor() {
         {/* RIGHT PANEL - Prompt & Variations */}
         <aside 
           className={`border-l border-border/50 bg-surface overflow-y-auto transition-all duration-300 ${
-            rightPanelCollapsed ? 'w-0' : 'w-96'
+            rightPanelCollapsed ? 'hidden' : 'w-full lg:w-96'
           }`}
         >
           <div className="p-6 space-y-6">
