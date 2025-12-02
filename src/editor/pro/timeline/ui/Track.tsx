@@ -62,7 +62,7 @@ export const VideoTrack = ({
   const videoTrack = tracks.find(t => t.type === 'video');
   
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0 flex items-center">
       {/* Thumbnail strip as background */}
       <ThumbnailStrip
         thumbnails={thumbnails}
